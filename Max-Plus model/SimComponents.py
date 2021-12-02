@@ -38,7 +38,9 @@ class Packet(object):
         self.src = src
         self.dst = dst
         self.flow_id = flow_id
-
+        self.ltime = 0
+        self.arival = {}
+        self.departure = {}
     def __repr__(self):
         return "id: {}, src: {}, time: {}, size: {}".\
             format(self.id, self.src, self.time, self.size)
@@ -63,11 +65,12 @@ class PacketGenerator(object):
 
 
     """
-    def __init__(self, env, id,  adist, sdist, initial_delay=0, finish=float("inf"), flow_id=0):
+    def __init__(self, env, id,  adist, sdist, link_rate, initial_delay=0, finish=float("inf"), flow_id=0):
         self.id = id
         self.env = env
         self.adist = adist
         self.sdist = sdist
+        self.link_rate = link_rate
         self.initial_delay = initial_delay
         self.finish = finish
         self.out = None
@@ -84,6 +87,9 @@ class PacketGenerator(object):
             yield self.env.timeout(self.adist())
             self.packets_sent += 1
             p = Packet(self.env.now, self.sdist(), self.packets_sent, src=self.id, flow_id=self.flow_id)
+            p.ltime = p.size*8/self.link_rate
+            p.arival[1]= self.env.now + p.ltime
+            print(p)
             self.out.put(p)
 
 
@@ -121,6 +127,7 @@ class PacketSink(object):
         self.bytes_rec = 0
         self.selector = selector
         self.last_arrival = 0.0
+        self.data = {}
 
     def put(self, pkt):
         if not self.selector or self.selector(pkt):
@@ -135,6 +142,11 @@ class PacketSink(object):
                 self.last_arrival = now
             self.packets_rec += 1
             self.bytes_rec += pkt.size
+            for n in pkt.departure.keys():
+                self.data[pkt.id] = {"arivals": pkt.arival,
+                                    "departures": pkt.departure,
+                                    "link time": pkt.ltime
+                                    }
             if self.debug:
                 print(pkt)
 
@@ -154,14 +166,23 @@ class link(object):
     
     def __init__(self, env, rate):
         self.store = simpy.Store(env)
+        # self.out = None
         self.env = env
         self.rate = rate
+        # self.action = env.process(self.run())
+        # self.rec = 0
         self.tTime = {}
 
     def run(self):
         while True:
             msg = (yield self.store.get())
             self.tTime[msg.id] = (msg.size*8/self.rate)
+    #         yield self.env.timeout(msg.size*8/self.rate)
+    #         self.store.put(msg)
+    
+    # def put(self, pkt):
+    #     self.rec +=1
+    #     return self.store.put(pkt)      
 
 class SwitchPort(object):
     """ Models a switch output port with a given rate and buffer size limit in bytes.
@@ -180,7 +201,8 @@ class SwitchPort(object):
             queue limit will be based on packets.
 
     """
-    def __init__(self, env, rate, qlimit=None, limit_bytes=True, debug=False):
+    def __init__(self, id, env, rate, qlimit=None, limit_bytes=True, debug=False):
+        self.id = id
         self.store = simpy.Store(env)
         self.rate = rate
         self.env = env
@@ -193,14 +215,16 @@ class SwitchPort(object):
         self.debug = debug
         self.busy = 0  # Used to track if a packet is currently being sent
         self.action = env.process(self.run())  # starts the run() method as a SimPy process
-        self.sigma = {}
+
     def run(self):
         while True:
             msg = (yield self.store.get())
+            #  yield self.env.timeout(msg.size*8.0/self.link_from_rate)## simulate link
             self.busy = 1
             self.byte_size -= msg.size
-            self.sigma[msg.id] = msg.size*8.0/self.rate
             yield self.env.timeout(msg.size*8.0/self.rate)
+            msg.departure[self.id] = self.env.now
+            msg.arival[self.id + 1] = msg.departure[self.id] +msg.ltime
             self.out.put(msg)
             self.busy = 0
             if self.debug:
@@ -216,6 +240,7 @@ class SwitchPort(object):
         if self.limit_bytes and tmp_byte_count >= self.qlimit:
             self.packets_drop += 1
             return
+        ## for que based on packet size
         elif not self.limit_bytes and len(self.store.items) >= self.qlimit-1:
             self.packets_drop += 1
         else:
