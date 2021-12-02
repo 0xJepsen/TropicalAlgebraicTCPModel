@@ -1,12 +1,14 @@
 from random import expovariate
+from MatrixMath import Matrix
 from scipy.stats import poisson
 import simpy
-from SimComponents import PacketGenerator, PacketSink, SwitchPort, link
+from pprint import pprint
+from SimComponents import PacketGenerator, PacketSink, SwitchPort
 
 MU = 0.6 # Arrival distributed parameter mu for poisson inter arival time
-LINK_BANDWIDTH = 100
-SWITCH_BANDWIDTH = 100
-SWITCH_QSIZE = 50 # in bytes
+LINK_BANDWIDTH = 1000
+SWITCH_BANDWIDTH = 500
+SWITCH_QSIZE = 250 # in bytes
 LAMBDA = .02 # e^(-0.3)x
 
 def constArrival():  # Constant arrival distribution for generator 1
@@ -15,17 +17,24 @@ def constArrival():  # Constant arrival distribution for generator 1
 def distSize():
     return expovariate(LAMBDA) # packet size distribution
 
-def delay(src, dst):
-    # TODO:
-    return #time delay between router i and router j
+def delay(data, src, dst, n):
+    return data[n]['arivals'][dst] - data[n]['arivals'][src] #time delay between router i and router j
 
-def sigma(i, n):
-    return # agrigated service time of packet n at router i
+def sigma(data, i, n): # note that the switch rate has to be less then the link rate for this to be positive
+    return data[n]['departures'][i] - data[n]['arivals'][i] # agrigated service time of packet n at router i
 
-def M():
+def M(data, n):
+    dimension = data[n]['departures'].keys()
+    print("dimension is: ", dimension)
+    M = Matrix(dims=(len(dimension),len(dimension)), fill=0.0)
+    for i in dimension:
+        for j in dimension:
+            if i>= j:
+                M[i,j] = sigma(data, i, n)
+
     return # Matrix object
 
-def Mprime():
+def Mprime(data, n):
     return # Matrix object
 
 def make_A(vn, n):
@@ -37,24 +46,34 @@ def make_A(vn, n):
 env = simpy.Environment()  
 # Create the SimPy environment
 # Create the packet generators and sink
-pg = PacketGenerator(env, "Generator", constArrival, distSize)
-ps = PacketSink(env, debug=True)  # debugging enable for simple output
-l1 = link(env, LINK_BANDWIDTH)
-l2 = link(env, LINK_BANDWIDTH)
-l3 = link(env, LINK_BANDWIDTH)
-s1 = SwitchPort(env, rate=SWITCH_BANDWIDTH, qlimit=SWITCH_QSIZE)
-s2 = SwitchPort(env, rate=SWITCH_BANDWIDTH, qlimit=SWITCH_QSIZE)
+pg = PacketGenerator(env, "Generator", constArrival, distSize, LINK_BANDWIDTH)
+ps = PacketSink(env)  # debugging enable for simple output
+# l1 = link(env, LINK_BANDWIDTH)
+# l2 = link(env, LINK_BANDWIDTH)
+# l3 = link(env, LINK_BANDWIDTH)
+s1 = SwitchPort(1, env, rate=SWITCH_BANDWIDTH, qlimit=SWITCH_QSIZE)
+s2 = SwitchPort(2, env, rate=SWITCH_BANDWIDTH, qlimit=SWITCH_QSIZE)
 # Wire packet generators and sink together
 # pg.out = l1
 # l1.out = s1
 # s1.out = l2
 # l2.out = s2
 # s2.out = l3
-# l3.out = ps 
+# l3.out = ps
 pg.out = s1
 s1.out = s2
 s2.out = ps
 env.run(until=20)
-#print("waits: {}".format(ps.waits))
-print("s1 Sigma = {}".format(s1.sigma)) ## collection sigma's in packets, need to verify this
+
 print("recieved: {}, s1 dropped {}, s2 dropped {}, sent {}".format(ps.packets_rec, s1.packets_drop, s2.packets_drop, pg.packets_sent))
+
+pprint(ps.data)
+
+## test delay
+pprint(delay(ps.data, 1, 2, 1)) # print the delay from s1 to s2 for pkt 1
+
+## test sigma
+pprint(sigma(ps.data, 1, 1)) # print processing time of packet 1 at s1
+
+## test M
+pprint(M(ps.data,1))
