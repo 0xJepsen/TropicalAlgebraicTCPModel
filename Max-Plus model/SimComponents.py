@@ -85,8 +85,8 @@ class PacketGenerator(object):
         while self.env.now < self.finish:
             # wait for next transmission
             yield self.env.timeout(self.adist())
-            self.packets_sent += 1
             p = Packet(self.env.now, self.sdist(), self.packets_sent, src=self.id, flow_id=self.flow_id)
+            self.packets_sent += 1
             p.ltime = p.size*8/self.link_rate
             p.arival[1]= self.env.now + p.ltime
             print(p)

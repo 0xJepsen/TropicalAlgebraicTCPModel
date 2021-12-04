@@ -21,18 +21,24 @@ def delay(data, src, dst, n):
     return data[n]['arivals'][dst] - data[n]['arivals'][src] #time delay between router i and router j
 
 def sigma(data, i, n): # note that the switch rate has to be less then the link rate for this to be positive
-    return data[n]['departures'][i] - data[n]['arivals'][i] # agrigated service time of packet n at router i
+    return data[n]['departures'][i+1] - data[n]['arivals'][i+1] # agrigated service time of packet n at router i
 
 def M(data, n):
     dimension = data[n]['departures'].keys()
+    print(len(dimension))
     print("dimension is: ", dimension)
     M = Matrix(dims=(len(dimension),len(dimension)), fill=0.0)
-    for i in dimension:
-        for j in dimension:
+    for i in range(len(dimension)):
+        print("i is: ", i)
+        for j in range(len(dimension)):
+            print("j is: ", j)
             if i>= j:
+                # loops for sumations here
                 M[i,j] = sigma(data, i, n)
+            if i < j:
+                M[i,j] = -inf # < for -inf
 
-    return # Matrix object
+    return M
 
 def Mprime(data, n):
     return # Matrix object
@@ -76,4 +82,5 @@ pprint(delay(ps.data, 1, 2, 1)) # print the delay from s1 to s2 for pkt 1
 pprint(sigma(ps.data, 1, 1)) # print processing time of packet 1 at s1
 
 ## test M
-pprint(M(ps.data,1))
+test = M(ps.data,1)
+print(test)
