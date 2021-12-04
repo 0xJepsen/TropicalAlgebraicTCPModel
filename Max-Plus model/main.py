@@ -62,11 +62,11 @@ def makeMprime(data, n):
                 Mprime[i,j] = float('-inf')
     return Mprime
 
-def make_A(vn, n):
+def make_A(M, Mprime, window):
     """ vn is the window size experienced by packet n
         n is the packet number
     """
-    return # A_vn 
+    return (M + Mprime, #|epsilon| + D
 
 env = simpy.Environment()  
 # Create the SimPy environment
