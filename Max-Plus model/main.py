@@ -18,7 +18,7 @@ def distSize():
     return expovariate(LAMBDA) # packet size distribution
 
 def delay(data, src, dst, n):
-    return data[n]['arivals'][dst] - data[n]['arivals'][src] #time delay between router i and router j
+    return data[n]['arivals'][dst+1] - data[n]['arivals'][src+1] #time delay between router i and router j
 
 def sigma(data, i, n): # note that the switch rate has to be less then the link rate for this to be positive
     return data[n]['departures'][i+1] - data[n]['arivals'][i+1] # agrigated service time of packet n at router i
@@ -33,15 +33,34 @@ def M(data, n):
         for j in range(len(dimension)):
             print("j is: ", j)
             if i>= j:
-                # loops for sumations here
-                M[i,j] = sigma(data, i, n)
+                for k in range(j, i+1):
+                    print("k is: ", k)
+                    M[i,j] += sigma(data, k, n)
+                for h in range(j, i):
+                    M[i,j] += delay(data, h, h+1, n) #this k+1 might go out of bounds
             if i < j:
-                M[i,j] = -inf # < for -inf
-
+                M[i,j] = float('-inf') # < for -inf
     return M
 
-def Mprime(data, n):
-    return # Matrix object
+def makeMprime(data, n):
+    dimension = data[n]['departures'].keys()
+    n_routers = len(dimension) -1
+    print(len(dimension))
+    print("dimension is: ", dimension)
+    Mprime = Matrix(dims=(len(dimension),len(dimension)), fill=0.0)
+    for i in range(len(dimension)):
+        print("i is: ", i)
+        for j in range(len(dimension)):
+            print("j is: ", j)
+            if j == n_routers:
+                for k in range(1,i+1):
+                    print("k is: ", k)
+                    Mprime[i,j] += delay(data, k-1, k, n)
+                    Mprime[i,j] += sigma(data, k, n)
+                Mprime[i,j] += delay(data, 0, n_routers, n)
+            if j < n_routers:
+                Mprime[i,j] = float('-inf')
+    return Mprime
 
 def make_A(vn, n):
     """ vn is the window size experienced by packet n
@@ -84,3 +103,7 @@ pprint(sigma(ps.data, 1, 1)) # print processing time of packet 1 at s1
 ## test M
 test = M(ps.data,1)
 print(test)
+
+# test makeMprime
+testprime = makeMprime(ps.data, 1)
+print(testprime)
