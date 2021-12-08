@@ -22,7 +22,12 @@ def delay(data, src, dst, n):
 
 def sigma(data, i, n): # note that the switch rate has to be less then the link rate for this to be positive
     return data[n]['departures'][i+1] - data[n]['arivals'][i+1] # agrigated service time of packet n at router i
-
+def Y(data, n):
+    dimension = len(data[n]['departures'].keys())
+    M = Matrix(dims =(1, dimension), fill = 0.0)
+    for i in range(1,dimension +1):
+        M[0,i-1] = data[n]['departures'][i]
+    return M
 def M(data, n):
     dimension = data[n]['departures'].keys()
     print(len(dimension))
@@ -46,15 +51,14 @@ def makeMprime(data, n):
     dimension = data[n]['departures'].keys()
     n_routers = len(dimension) -1
     print(len(dimension))
-    print("dimension is: ", dimension)
     Mprime = Matrix(dims=(len(dimension),len(dimension)), fill=0.0)
     for i in range(len(dimension)):
-        print("i is: ", i)
+        # print("i is: ", i)
         for j in range(len(dimension)):
-            print("j is: ", j)
+            # print("j is: ", j)
             if j == n_routers:
                 for k in range(1,i+1):
-                    print("k is: ", k)
+                    # print("k is: ", k)
                     Mprime[i,j] += delay(data, k-1, k, n)
                     Mprime[i,j] += sigma(data, k, n)
                 Mprime[i,j] += delay(data, 0, n_routers, n)
@@ -62,13 +66,13 @@ def makeMprime(data, n):
                 Mprime[i,j] = float('-inf')
     return Mprime
 
-def make_A(M, Mprime, window):
-    """ vn is the window size experienced by packet n
-        n is the packet number
-    """
-    return (M + Mprime, #|epsilon| + D
+# def make_A(M, Mprime, window):
+#     """ vn is the window size experienced by packet n
+#         n is the packet number
+#     """
+#     return (M + Mprime, #|epsilon| + D
 
-env = simpy.Environment()  
+env = simpy.Environment()
 # Create the SimPy environment
 # Create the packet generators and sink
 pg = PacketGenerator(env, "Generator", constArrival, distSize, LINK_BANDWIDTH)
@@ -105,5 +109,9 @@ test = M(ps.data,1)
 print(test)
 
 # test makeMprime
-testprime = makeMprime(ps.data, 1)
-print(testprime)
+# testprime = makeMprime(ps.data, 1)
+# print(testprime)
+
+# test for Y(n)
+y1 = Y(ps.data, 1)
+print(y1)

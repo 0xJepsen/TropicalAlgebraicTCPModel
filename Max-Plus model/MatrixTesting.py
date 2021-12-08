@@ -1,7 +1,6 @@
 
 from MatrixMath import Matrix
 
-
 A = Matrix(dims=(3,3), fill=1.0)
 B = Matrix(dims=(3,3), fill=2.0)
 
