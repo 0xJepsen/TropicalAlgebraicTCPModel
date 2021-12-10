@@ -1,3 +1,5 @@
+import csv
+from matplotlib import pyplot as plt
 from random import expovariate
 from MatrixMath import Matrix
 from scipy.stats import poisson
@@ -107,25 +109,38 @@ pprint(ps.data)
 
 # test for Y(n)
 y0 = Y(ps.data, 0)
-print(y0)
+# print(y0)
 
 Z = Z(ps.data)
-print(Z[0])
+# print(Z[0])
 
 A = make_A(ps.data, 0)
-print(A)
-g = Z[1]
-print("Cols: ",g.cols)
-print("rows: ",g.rows)
 def validation(A_v_n, z_n):
     return A@z_n
 #print(len(ps.data.keys()))
 new = []
 for n in ps.data.keys():
-    print("n is: ", n)
     new.append(validation(A, Z[n]))
 
-print(new[1])
-print(len(new))
-print(len(Z))
+error = []
+for n in ps.data.keys():
+    pair = []
+    for i in range((Z[n].rows)):
+        diff = Z[n][i,0] - new[n][i,0]
+        pair.append(diff)
+    error.append(pair)
 
+# normalize error 
+final =[]
+for n in range(len(error)):
+    tmp = (abs(error[n][0]) + abs(error[n][1]))
+    final.append(tmp)
+
+print(len(final))
+plt.figure(figsize=(10,8))
+plt.bar(range(len(final)), final)
+ax = plt.subplot()
+plt.title('Error Between Z(n) observed and Z(n) Defined Recrusively')
+plt.ylabel('Time Error')
+plt.xlabel('Packet n')
+plt.show()
