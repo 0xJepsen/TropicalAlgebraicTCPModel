@@ -77,27 +77,13 @@ class Matrix:
 			C = Matrix( dims = (self.rows, other.cols), fill = 0.0)
 			#Multiply the elements in the same row of the first matrix 
 			#to the elements in the same col of the second matrix
-			# print("rows: ",C.rows)
-			# print("cols: ",C.cols)
-			# print(C[1,0])
 			for i in range(self.rows):
-					# print("i is: ", i)
 					for j in range(other.cols):
-						# print("J is: ",j)
 						acc = 0
 						for k in range(self.rows):
-							# print("k is: ",k)
 							newval = (self.A[i][k] + other.A[k][j]) # plus
 							acc = max(newval, acc) # then max
-						# print("i:",i)
-						# print("j: ",j)
-						# print("acc: ", acc)
-						# print(C[i,j])
-						# print(C[1,0])
 						C[i,j] = acc
-						# print(C[i,j])
-						#C.A[i][j] = acc
-
 			return C
 
 	def __getitem__(self, key):
