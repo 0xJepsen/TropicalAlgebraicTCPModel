@@ -34,9 +34,9 @@ def Y(data, n):
     return M
 
 def Z(data):
-    M = Matrix(dims=(len(data.keys()),1), fill= 0.0)#Matrix(dims=(),fill=0.0)) 
+    M = []
     for n in data.keys():
-        M[n,0] = Y(data, n)
+        M.append(Y(data, n))
     return M
 
 def makeM(data, n):
@@ -110,11 +110,11 @@ y0 = Y(ps.data, 0)
 print(y0)
 
 Z = Z(ps.data)
-print(Z[0,0])
+print(Z[0])
 
 A = make_A(ps.data, 0)
 print(A)
-g = Z[1,0]
+g = Z[1]
 print("Cols: ",g.cols)
 print("rows: ",g.rows)
 def validation(A_v_n, z_n):
@@ -123,7 +123,9 @@ def validation(A_v_n, z_n):
 new = []
 for n in ps.data.keys():
     print("n is: ", n)
-    new.append(validation(A, Z[n,0]))
+    new.append(validation(A, Z[n]))
 
 print(new[1])
+print(len(new))
+print(len(Z))
 
