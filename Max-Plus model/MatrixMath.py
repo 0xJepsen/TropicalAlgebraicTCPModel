@@ -73,23 +73,32 @@ class Matrix:
 
 	def __matmul__(self, other): #matrix-matrix multiplication
 
-		if isinstance(other, Matrix):
-			C = Matrix( dims = (self.rows, self.cols), fill = 0)
-
+		if isinstance(other, Matrix) and (self.rows == other.rows):
+			C = Matrix( dims = (self.rows, other.cols), fill = 0.0)
 			#Multiply the elements in the same row of the first matrix 
 			#to the elements in the same col of the second matrix
+			# print("rows: ",C.rows)
+			# print("cols: ",C.cols)
+			# print(C[1,0])
 			for i in range(self.rows):
-				for j in range(self.cols):
-					acc = 0
+					# print("i is: ", i)
+					for j in range(other.cols):
+						# print("J is: ",j)
+						acc = 0
+						for k in range(self.rows):
+							# print("k is: ",k)
+							newval = (self.A[i][k] + other.A[k][j]) # plus
+							acc = max(newval, acc) # then max
+						# print("i:",i)
+						# print("j: ",j)
+						# print("acc: ", acc)
+						# print(C[i,j])
+						# print(C[1,0])
+						C[i,j] = acc
+						# print(C[i,j])
+						#C.A[i][j] = acc
 
-					for k in range(self.rows):
-						# acc += self.A[i][k] * other.A[k][j]
-						newval = (self.A[i][k] + other.A[k][j]) # plus
-						acc = max(newval, acc) # then max
-
-					C.A[i][j] = acc
-
-		return C
+			return C
 
 	def __getitem__(self, key):
 		if isinstance(key, tuple):

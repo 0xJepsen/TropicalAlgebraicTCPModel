@@ -28,13 +28,13 @@ def sigma(data, i, n): # note that the switch rate has to be less then the link 
 
 def Y(data, n):
     dimension = len(data[n]['departures'].keys())
-    M = Matrix(dims =(1, dimension), fill = 0.0)
+    M = Matrix(dims =(dimension, 1), fill = 0.0)
     for i in range(1,dimension +1):
-        M[0,i-1] = data[n]['departures'][i]
+        M[i-1,0] = data[n]['departures'][i]
     return M
 
 def Z(data):
-    M = Matrix(dims=(len(data.keys()),1), fill= []) 
+    M = Matrix(dims=(len(data.keys()),1), fill= 0.0)#Matrix(dims=(),fill=0.0)) 
     for n in data.keys():
         M[n,0] = Y(data, n)
     return M
@@ -114,12 +114,16 @@ print(Z[0,0])
 
 A = make_A(ps.data, 0)
 print(A)
-print(Z[0,0])
+g = Z[1,0]
+print("Cols: ",g.cols)
+print("rows: ",g.rows)
 def validation(A_v_n, z_n):
     return A@z_n
-
-new = Matrix(dims=(0,ps.data.keys), fill = [])
+#print(len(ps.data.keys()))
+new = []
 for n in ps.data.keys():
     print("n is: ", n)
-    new[0,n] = validation(A, Z[n,0])
+    new.append(validation(A, Z[n,0]))
+
+print(new[1])
 
