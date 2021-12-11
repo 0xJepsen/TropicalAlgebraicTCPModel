@@ -12,6 +12,7 @@ LINK_BANDWIDTH = 10000
 SWITCH_BANDWIDTH = 5000
 SWITCH_QSIZE = 2500 # in bytes
 LAMBDA = .02 # e^(-0.3)x
+SIM_TIME = 20 # NUMNBER OF EPOCHS
 
 def constArrival():  # Constant arrival distribution for generator 1
     return int(poisson.rvs(MU)) # using Poisson interarrival time to model bursty traffic
@@ -87,7 +88,7 @@ s2 = SwitchPort(2, env, rate=SWITCH_BANDWIDTH, qlimit=SWITCH_QSIZE)
 pg.out = s1
 s1.out = s2
 s2.out = ps
-env.run(until=20)
+env.run(until=SIM_TIME)
 
 print("recieved: {}, s1 dropped {}, s2 dropped {}, sent {}".format(ps.packets_rec, s1.packets_drop, s2.packets_drop, pg.packets_sent))
 
@@ -137,6 +138,9 @@ for n in range(len(error)):
     final.append(tmp)
 
 print(len(final))
+print("Maximum: ", max(final))
+print("Minimum: ", min(final))
+print("average: ", sum(final)/len(final))
 plt.figure(figsize=(10,8))
 plt.bar(range(len(final)), final)
 ax = plt.subplot()
