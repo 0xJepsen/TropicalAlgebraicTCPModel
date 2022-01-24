@@ -1,27 +1,15 @@
-import csv
-from matplotlib import pyplot as plt
 from random import expovariate
 from MatrixMath import Matrix
 from scipy.stats import poisson
-import simpy
-from pprint import pprint
-from SimComponents import PacketGenerator, PacketSink, SwitchPort
-
-MU = 0.6  # Arrival distributed parameter mu for poisson inter arival time
-LINK_BANDWIDTH = 10000
-SWITCH_BANDWIDTH = 5000
-SWITCH_QSIZE = 2500  # in bytes
-LAMBDA = 0.02  # e^(-0.3)x
-SIM_TIME = 20  # NUMNBER OF EPOCHS
 
 
-def constArrival():  # Constant arrival distribution for generator 1
+def constArrival(MU):  # Constant arrival distribution for generator 1
     return int(
         poisson.rvs(MU)
     )  # using Poisson interarrival time to model bursty traffic
 
 
-def distSize():
+def distSize(LAMBDA):
     return expovariate(LAMBDA)  # packet size distribution
 
 
@@ -95,84 +83,3 @@ def make_A(data, n):
     Mprime = makeMprime(data, n)
     M = makeM(data, n)
     return M + Mprime
-
-
-env = simpy.Environment()
-# Create the SimPy environment
-# Create the packet generators and sink
-pg = PacketGenerator(env, "Generator", constArrival, distSize, LINK_BANDWIDTH)
-ps = PacketSink(env)  # debugging enable for simple output
-s1 = SwitchPort(1, env, rate=SWITCH_BANDWIDTH, qlimit=SWITCH_QSIZE)
-s2 = SwitchPort(2, env, rate=SWITCH_BANDWIDTH, qlimit=SWITCH_QSIZE)
-# Wire packet generators and sink together
-pg.out = s1
-s1.out = s2
-s2.out = ps
-env.run(until=SIM_TIME)
-
-print(
-    "recieved: {}, s1 dropped {}, s2 dropped {}, sent {}".format(
-        ps.packets_rec, s1.packets_drop, s2.packets_drop, pg.packets_sent
-    )
-)
-
-pprint(ps.data)
-
-## test delay
-# pprint(delay(ps.data, 1, 2, 1)) # print the delay from s1 to s2 for pkt 1
-
-## test sigma
-# pprint(sigma(ps.data, 1, 1)) # print processing time of packet 1 at s1
-
-## test M
-# testM = makeM(ps.data, 0)
-# print(testM)
-
-# test makeMprime
-# testprime = makeMprime(ps.data, 0)
-# print(testprime)
-
-# test for Y(n)
-y0 = Y(ps.data, 0)
-# print(y0)
-
-Z = Z(ps.data)
-# print(Z[0])
-
-A = make_A(ps.data, 0)
-
-
-def validation(A_v_n, z_n):
-    return A @ z_n
-
-
-# print(len(ps.data.keys()))
-new = []
-for n in ps.data.keys():
-    new.append(validation(A, Z[n]))
-
-error = []
-for n in ps.data.keys():
-    pair = []
-    for i in range((Z[n].rows)):
-        diff = Z[n][i, 0] - new[n][i, 0]
-        pair.append(diff)
-    error.append(pair)
-
-# normalize error
-final = []
-for n in range(len(error)):
-    tmp = abs(error[n][0]) + abs(error[n][1])
-    final.append(tmp)
-
-print(len(final))
-print("Maximum: ", max(final))
-print("Minimum: ", min(final))
-print("average: ", sum(final) / len(final))
-plt.figure(figsize=(10, 8))
-plt.bar(range(len(final)), final)
-ax = plt.subplot()
-plt.title("Error Between Z(n) observed and Z(n) Defined Recrusively")
-plt.ylabel("Time Error")
-plt.xlabel("Packet n")
-plt.show()

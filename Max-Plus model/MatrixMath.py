@@ -1,100 +1,97 @@
 class Matrix:
-    
-	def __init__(self, dims, fill):
-		
-		self.rows = dims[0]
-		self.cols = dims[1]
+    def __init__(self, dims, fill):
 
-		self.A = [[fill] * self.cols for i in range(self.rows)]
+        self.rows = dims[0]
+        self.cols = dims[1]
 
+        self.A = [[fill] * self.cols for i in range(self.rows)]
 
-	def __str__(self):
-	    m = len(self.A) # Get the first dimension
-	    mtxStr = ''
-	    
-	    mtxStr += '------------- output -------------\n'
-	    
-	    for i in range(m):
-	        mtxStr += ('|' + ', '.join( map(lambda x:'{0:8.3f}'.format(x), self.A[i])) + '| \n')
+    def __str__(self):
+        m = len(self.A)  # Get the first dimension
+        mtxStr = ""
 
-	    mtxStr += '----------------------------------'
-	
-	    return mtxStr
+        mtxStr += "------------- output -------------\n"
 
-	def __add__(self, other):
+        for i in range(m):
+            mtxStr += (
+                "|" + ", ".join(map(lambda x: "{0:8.3f}".format(x), self.A[i])) + "| \n"
+            )
 
-		#Create a new matrix
-		C = Matrix( dims = (self.rows, self.cols), fill = 0)
+        mtxStr += "----------------------------------"
 
-		#Check if the other object is of type Matrix
-		if isinstance (other, Matrix):
-			#Add the corresponding element of 1 matrices to another
-			for i in range(self.rows):
-				for j in range(self.cols):
-					C.A[i][j] = max(self.A[i][j],other.A[i][j])  # changed for max plus
+        return mtxStr
 
-		#If the other object is a scaler
-		elif isinstance (other, (int, float)):
-			#Add that constant to every element of A
-			for i in range(self.rows):
-				for j in range(self.cols):
-					C.A[i][j] = max(self.A[i][j], other)
+    def __add__(self, other):
 
+        # Create a new matrix
+        C = Matrix(dims=(self.rows, self.cols), fill=0)
 
-		return C
+        # Check if the other object is of type Matrix
+        if isinstance(other, Matrix):
+            # Add the corresponding element of 1 matrices to another
+            for i in range(self.rows):
+                for j in range(self.cols):
+                    C.A[i][j] = max(self.A[i][j], other.A[i][j])  # changed for max plus
 
-	#Right addition can be done by calling left addition
-	def __radd__(self, other):
-		return self.__add__(other)
+        # If the other object is a scaler
+        elif isinstance(other, (int, float)):
+            # Add that constant to every element of A
+            for i in range(self.rows):
+                for j in range(self.cols):
+                    C.A[i][j] = max(self.A[i][j], other)
 
-	def __mul__(self, other): #pointwise multiplication
+        return C
 
-		C = Matrix( dims = (self.rows, self.cols), fill = 0)
-		if isinstance(other, Matrix):
+    # Right addition can be done by calling left addition
+    def __radd__(self, other):
+        return self.__add__(other)
 
-			for i in range(self.rows):
-				for j in range(self.cols):
-					C.A[i][j] = self.A[i][j] * other.A[i][j]
+    def __mul__(self, other):  # pointwise multiplication
 
-		#Scaler multiplication
-		elif isinstance(other, (int, float)):
+        C = Matrix(dims=(self.rows, self.cols), fill=0)
+        if isinstance(other, Matrix):
 
-			for i in range(self.rows):
-				for j in range(self.cols):
-					C.A[i][j] = self.A[i][j] * other
+            for i in range(self.rows):
+                for j in range(self.cols):
+                    C.A[i][j] = self.A[i][j] * other.A[i][j]
 
-		return C 
+        # Scaler multiplication
+        elif isinstance(other, (int, float)):
 
-	#Point-wise multiplication is also commutative
-	def __rmul__(self, other):
+            for i in range(self.rows):
+                for j in range(self.cols):
+                    C.A[i][j] = self.A[i][j] * other
 
-		return self.__mul__(other)
+        return C
 
+    # Point-wise multiplication is also commutative
+    def __rmul__(self, other):
 
-	def __matmul__(self, other): #matrix-matrix multiplication
+        return self.__mul__(other)
 
-		if isinstance(other, Matrix) and (self.rows == other.rows):
-			C = Matrix( dims = (self.rows, other.cols), fill = 0.0)
-			#Multiply the elements in the same row of the first matrix 
-			#to the elements in the same col of the second matrix
-			for i in range(self.rows):
-					for j in range(other.cols):
-						acc = 0
-						for k in range(self.rows):
-							newval = (self.A[i][k] + other.A[k][j]) # plus
-							acc = max(newval, acc) # then max
-						C[i,j] = acc
-			return C
+    def __matmul__(self, other):  # matrix-matrix multiplication
 
-	def __getitem__(self, key):
-		if isinstance(key, tuple):
-			i = key[0]
-			j = key[1]
-			return self.A[i][j]
+        if isinstance(other, Matrix) and (self.rows == other.rows):
+            C = Matrix(dims=(self.rows, other.cols), fill=0.0)
+            # Multiply the elements in the same row of the first matrix
+            # to the elements in the same col of the second matrix
+            for i in range(self.rows):
+                for j in range(other.cols):
+                    acc = 0
+                    for k in range(self.rows):
+                        newval = self.A[i][k] + other.A[k][j]  # plus
+                        acc = max(newval, acc)  # then max
+                    C[i, j] = acc
+            return C
 
+    def __getitem__(self, key):
+        if isinstance(key, tuple):
+            i = key[0]
+            j = key[1]
+            return self.A[i][j]
 
-	def __setitem__(self, key, value):
-		if isinstance(key, tuple):
-			i = key[0]
-			j = key[1]
-			self.A[i][j] = value
+    def __setitem__(self, key, value):
+        if isinstance(key, tuple):
+            i = key[0]
+            j = key[1]
+            self.A[i][j] = value
