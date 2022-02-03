@@ -110,7 +110,10 @@ s2 = SwitchPort(2, env, rate=SWITCH_BANDWIDTH, qlimit=SWITCH_QSIZE)
 could make a tcp recive buffer, can only send this buffer size before getting an ack
 Make a running count of all bytes sent -> total packet size
 When it reaches window size, simulate an ACK (can calculate the wait time for this)
-repeate till time finishes"""
+repeate till time finishes..
+
+CRC paper: Computer Comunication Review, and IEE network Magazine
+"""
 pg.out = s1
 s1.out = s2
 s2.out = ps
