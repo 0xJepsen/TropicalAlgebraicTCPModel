@@ -105,6 +105,12 @@ ps = PacketSink(env)  # debugging enable for simple output
 s1 = SwitchPort(1, env, rate=SWITCH_BANDWIDTH, qlimit=SWITCH_QSIZE)
 s2 = SwitchPort(2, env, rate=SWITCH_BANDWIDTH, qlimit=SWITCH_QSIZE)
 # Wire packet generators and sink together
+
+"""Window size theory
+could make a tcp recive buffer, can only send this buffer size before getting an ack
+Make a running count of all bytes sent -> total packet size
+When it reaches window size, simulate an ACK (can calculate the wait time for this)
+repeate till time finishes"""
 pg.out = s1
 s1.out = s2
 s2.out = ps
@@ -143,7 +149,7 @@ A = make_A(ps.data, 0)
 
 
 def validation(A_v_n, z_n):
-    return A @ z_n
+    return A_v_n @ z_n
 
 
 # print(len(ps.data.keys()))
