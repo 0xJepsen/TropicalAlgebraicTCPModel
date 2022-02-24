@@ -12,7 +12,7 @@ def main():
 
 
 def AIMD(env):
-    WINDOW_SIZE = 1  ## Slow Start
+    WINDOW_SIZE = 0  ## Slow Start
     while True:
         yield env.timeout(WINDOW_SIZE)
         WINDOW_SIZE += 1
