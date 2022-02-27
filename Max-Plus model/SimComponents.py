@@ -10,6 +10,7 @@ import copy
 from simpy.core import BoundClass
 from simpy.resources import base
 from heapq import heappush, heappop
+import random
 
 
 class Packet(object):
@@ -97,7 +98,9 @@ class PacketGenerator(object):
     def run(self):
         """The generator function used in simulations."""
         yield self.env.timeout(self.initial_delay)
-        while self.env.now < self.finish:  # and window is not full
+        currentWidowSize = 1  # Slow Start
+        while self.env.now < self.finish:
+            # and window is not full
             # wait for next transmission
             yield self.env.timeout(self.adist())
             p = Packet(
@@ -113,6 +116,17 @@ class PacketGenerator(object):
             p.arival[1] = self.env.now + p.ltime
             print(p)
             self.out.put(p)
+            currentWidowSize += 1
+            loss = random.randint(0, 25)  # 5% simulated loss
+            print("Current Window Size increased to: ", currentWidowSize)
+            if loss == 1:
+                currentWidowSize = int(currentWidowSize / 2)
+                print("Window Size cut to:", currentWidowSize)
+                yield (
+                    self.env.timeout(
+                        2 * (40 / self.link_rate)
+                    )  # acks are usually 40bytes and we have two links
+                )  ## ack time needs to be here
 
 
 class PacketSink(object):

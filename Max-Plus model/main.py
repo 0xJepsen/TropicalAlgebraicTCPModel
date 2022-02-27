@@ -7,12 +7,13 @@ import simpy
 from pprint import pprint
 from SimComponents import PacketGenerator, PacketSink, SwitchPort
 
-MU = 0.6  # Arrival distributed parameter mu for poisson inter arival time
+MU = 0.9  # Arrival distributed parameter mu for poisson inter arival time
 LINK_BANDWIDTH = 10000
 SWITCH_BANDWIDTH = 5000
 SWITCH_QSIZE = 2500  # in bytes
 LAMBDA = 0.02  # e^(-0.3)x
-SIM_TIME = 20  # NUMNBER OF EPOCHS
+SIM_TIME = 100  # NUMNBER OF EPOCHS
+# MAX_WINDOWSIZE = 12
 
 
 def constArrival():  # Constant arrival distribution for generator 1
