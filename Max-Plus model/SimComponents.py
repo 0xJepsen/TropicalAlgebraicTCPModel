@@ -77,6 +77,7 @@ class PacketGenerator(object):
         adist,
         sdist,
         link_rate,
+        max_w,
         initial_delay=0,
         finish=float("inf"),
         flow_id=0,
@@ -86,6 +87,7 @@ class PacketGenerator(object):
         self.adist = adist
         self.sdist = sdist
         self.link_rate = link_rate
+        self.max_w = max_w
         self.initial_delay = initial_delay
         self.finish = finish
         self.out = None
@@ -119,7 +121,7 @@ class PacketGenerator(object):
             currentWidowSize += 1
             loss = random.randint(0, 25)  # 5% simulated loss
             print("Current Window Size increased to: ", currentWidowSize)
-            if loss == 1:
+            if loss or currentWidowSize >= self.max_w:
                 currentWidowSize = int(currentWidowSize / 2)
                 print("Window Size cut to:", currentWidowSize)
                 yield (

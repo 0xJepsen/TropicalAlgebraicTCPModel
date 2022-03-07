@@ -13,7 +13,7 @@ SWITCH_BANDWIDTH = 5000
 SWITCH_QSIZE = 2500  # in bytes
 LAMBDA = 0.02  # e^(-0.3)x
 SIM_TIME = 100  # NUMNBER OF EPOCHS
-# MAX_WINDOWSIZE = 12
+MAX_WINDOWSIZE = 1250
 
 
 def constArrival():  # Constant arrival distribution for generator 1
@@ -101,7 +101,9 @@ def make_A(data, n):
 env = simpy.Environment()
 # Create the SimPy environment
 # Create the packet generators and sink
-pg = PacketGenerator(env, "Generator", constArrival, distSize, LINK_BANDWIDTH)
+pg = PacketGenerator(
+    env, "Generator", constArrival, distSize, LINK_BANDWIDTH, MAX_WINDOWSIZE
+)
 ps = PacketSink(env)  # debugging enable for simple output
 s1 = SwitchPort(1, env, rate=SWITCH_BANDWIDTH, qlimit=SWITCH_QSIZE)
 s2 = SwitchPort(2, env, rate=SWITCH_BANDWIDTH, qlimit=SWITCH_QSIZE)
