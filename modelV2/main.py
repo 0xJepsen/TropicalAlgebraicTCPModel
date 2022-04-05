@@ -19,7 +19,9 @@ distSize =10
 SWITCH_BANDWIDTH =50
 LINK_BANDWIDTH =10
 SWITCH_QSIZE =50
-SIM_TIME = 10
+SIM_TIME = 25
+
+V_n = {1, 1, 2, 2, 2, 3, 3, 3, 3, 4, 1, 1, 2, 2, 2, 3, 3, 3, 3}
 
 
 env = simpy.Environment()  # Create the SimPy environment
@@ -34,9 +36,10 @@ s2 = SwitchPort(2, env, rate=SWITCH_BANDWIDTH, qlimit=SWITCH_QSIZE)
 pg.out = s1
 s1.out = s2
 s2.out = ps
+ps.out = pg
 env.run(until=SIM_TIME)
 
-pprint(ps.data)
+# pprint(ps.data)
 df = pd.DataFrame.from_dict(ps.data)
 print(df.head())
 print(

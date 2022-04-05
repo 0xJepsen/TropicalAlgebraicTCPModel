@@ -1,6 +1,5 @@
-from matrixmath import Matrix
+# from matrixmath import Matrix
 
 
-def delay ( data, src, dst, n):
-    try:
-        return ()
+def delay(src, dst):
+    return abs(dst - src)  # for link rate of 1
