@@ -89,7 +89,7 @@ class PacketGenerator(object):
             yield self.env.timeout(self.adist())
             p = Packet(self.env.now, self.size, self.packets_sent, src=self.id, flow_id=self.flow_id)
             p.ltime = p.size / self.link_rate
-            p.arrival[1] = self.env.now + p.ltime
+            p.arrival[0] = self.env.now + p.ltime
             p.departure[0] = self.env.now
             print(p)
             self.packets_sent += 1
@@ -204,7 +204,7 @@ class SwitchPort(object):
             self.byte_size -= msg.size
             yield self.env.timeout(msg.size*8.0/self.rate)
             msg.departure[self.id] = self.env.now
-            msg.arrival[self.id + 1] = msg.departure[self.id] + msg.ltime
+            msg.arrival[self.id] = msg.departure[self.id] + msg.ltime
             self.out.put(msg)
             self.busy = 0
             if self.debug:

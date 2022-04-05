@@ -2,6 +2,7 @@ from random import expovariate
 import simpy
 from SimComponents import PacketGenerator, PacketSink, SwitchPort
 from pprint import pprint
+import pandas as pd
 
 
 def constArrival():  # Constant arrival distribution for generator 1
@@ -36,6 +37,8 @@ s2.out = ps
 env.run(until=SIM_TIME)
 
 pprint(ps.data)
+df = pd.DataFrame.from_dict(ps.data)
+print(df.head())
 print(
     "recieved: {}, s1 dropped {}, s2 dropped {}, sent {}".format(
         ps.packets_rec, s1.packets_drop, s2.packets_drop, pg.packets_sent
