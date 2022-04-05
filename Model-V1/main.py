@@ -2,18 +2,19 @@ import csv
 from matplotlib import pyplot as plt
 from random import expovariate
 from MatrixMath import Matrix
-from scipy.stats import poisson
+from scipy.stats import poisson, uniform
 import simpy
+import json
 from pprint import pprint
 from SimComponents import PacketGenerator, PacketSink, SwitchPort
 
 MU = 0.9  # Arrival distributed parameter mu for poisson inter arival time
-LINK_BANDWIDTH = 10000
-SWITCH_BANDWIDTH = 5000
-SWITCH_QSIZE = 2500  # in bytes
+LINK_BANDWIDTH = 1000
+SWITCH_BANDWIDTH = 500
+SWITCH_QSIZE = 250  # in bytes
 LAMBDA = 0.02  # e^(-0.3)x
-SIM_TIME = 100  # NUMNBER OF EPOCHS
-MAX_WINDOWSIZE = 1250
+SIM_TIME = 10  # NUMNBER OF EPOCHS
+MAX_WINDOWSIZE = 125
 
 
 def constArrival():  # Constant arrival distribution for generator 1
@@ -29,7 +30,7 @@ def distSize():
 def delay(data, src, dst, n):
     try:
         return (
-            data[n]["arivals"][dst + 1] - data[n]["arivals"][src + 1]
+            data[n]["arrivals"][dst + 1] - data[n]["arrivals"][src + 1]
         )  # time delay between router i and router j
     except e:
         print("Packet not in data, must have been dropped")
@@ -39,7 +40,7 @@ def sigma(
     data, i, n
 ):  # note that the switch rate has to be less then the link rate for this to be positive
     return (
-        data[n]["departures"][i + 1] - data[n]["arivals"][i + 1]
+        data[n]["departures"][i + 1] - data[n]["arrivals"][i + 1]
     )  # agrigated service time of packet n at router i
 
 
@@ -78,7 +79,7 @@ def makeM(data, n):
 def makeMprime(data, n):
     dimension = data[n]["departures"].keys()
     n_routers = len(dimension) - 1
-    print(len(dimension))
+    # print(len(dimension))
     Mprime = Matrix(dims=(len(dimension), len(dimension)), fill=0.0)
     for i in range(len(dimension)):
         for j in range(len(dimension)):
@@ -102,7 +103,7 @@ env = simpy.Environment()
 # Create the SimPy environment
 # Create the packet generators and sink
 pg = PacketGenerator(
-    env, "Generator", constArrival, distSize, LINK_BANDWIDTH, MAX_WINDOWSIZE
+    env, "Generator", constArrival, distSize, LINK_BANDWIDTH, MAX_WINDOWSIZE #TODO:  make distsize const
 )
 ps = PacketSink(env)  # debugging enable for simple output
 s1 = SwitchPort(1, env, rate=SWITCH_BANDWIDTH, qlimit=SWITCH_QSIZE)
@@ -129,7 +130,10 @@ print(
 )
 
 pprint(ps.data)
-
+json_string = json.dumps(ps.data)
+# print(json_string)
+with open('json_data.json', 'w') as outfile:
+    json.dump(ps.data, outfile)
 ## test delay
 # pprint(delay(ps.data, 1, 2, 1)) # print the delay from s1 to s2 for pkt 1
 
@@ -146,10 +150,10 @@ pprint(ps.data)
 
 # test for Y(n)
 y0 = Y(ps.data, 0)
-# print(y0)
+print("Departure times for packet 0: ",y0)
 
 Z = Z(ps.data)
-# print(Z[0])
+print(Z[0])
 
 A = make_A(ps.data, 0)
 
@@ -177,7 +181,6 @@ for n in range(len(error)):
     tmp = abs(error[n][0]) + abs(error[n][1])
     final.append(tmp)
 
-print(len(final))
 print("Maximum: ", max(final))
 print("Minimum: ", min(final))
 print("average: ", sum(final) / len(final))
@@ -187,4 +190,4 @@ ax = plt.subplot()
 plt.title("Error Between Z(n) observed and Z(n) Defined Recrusively")
 plt.ylabel("Time Error")
 plt.xlabel("Packet n")
-plt.show()
+# plt.show()

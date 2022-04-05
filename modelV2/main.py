@@ -1,0 +1,43 @@
+from random import expovariate
+import simpy
+from SimComponents import PacketGenerator, PacketSink, SwitchPort
+from pprint import pprint
+
+
+def constArrival():  # Constant arrival distribution for generator 1
+    return 1.5
+
+
+def constArrival2():
+    return 2.0
+
+
+# def distSize():
+#     return expovariate(0.01)
+distSize =1
+SWITCH_BANDWIDTH =10
+LINK_BANDWIDTH =10
+SWITCH_QSIZE =50
+SIM_TIME = 10
+
+
+env = simpy.Environment()  # Create the SimPy environment
+# Create the packet generators and sink
+pg = PacketGenerator(
+    env, "Generator", constArrival, distSize, LINK_BANDWIDTH
+)
+ps = PacketSink(env)  # debugging enable for simple output
+s1 = SwitchPort(1, env, rate=SWITCH_BANDWIDTH, qlimit=SWITCH_QSIZE)
+s2 = SwitchPort(2, env, rate=SWITCH_BANDWIDTH, qlimit=SWITCH_QSIZE)
+# Wire packet generators and sink together
+pg.out = s1
+s1.out = s2
+s2.out = ps
+env.run(until=SIM_TIME)
+
+print(
+    "recieved: {}, s1 dropped {}, s2 dropped {}, sent {}".format(
+        ps.packets_rec, s1.packets_drop, s2.packets_drop, pg.packets_sent
+    )
+)
+pprint(ps.data)
