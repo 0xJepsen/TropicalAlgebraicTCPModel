@@ -11,3 +11,6 @@ Papers/Novel/Sumarry of Max Plus.pptx
 .idea/vcs.xml
 Papers/.DS_Store
 .DS_Store
+.DS_Store
+*.pyc
+Papers/.DS_Store
