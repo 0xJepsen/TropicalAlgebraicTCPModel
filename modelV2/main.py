@@ -14,8 +14,8 @@ def constArrival2():
 
 # def distSize():
 #     return expovariate(0.01)
-distSize =1
-SWITCH_BANDWIDTH =10
+distSize =10
+SWITCH_BANDWIDTH =50
 LINK_BANDWIDTH =10
 SWITCH_QSIZE =50
 SIM_TIME = 10
@@ -35,9 +35,9 @@ s1.out = s2
 s2.out = ps
 env.run(until=SIM_TIME)
 
+pprint(ps.data)
 print(
     "recieved: {}, s1 dropped {}, s2 dropped {}, sent {}".format(
         ps.packets_rec, s1.packets_drop, s2.packets_drop, pg.packets_sent
     )
 )
-pprint(ps.data)

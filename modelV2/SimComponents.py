@@ -90,7 +90,7 @@ class PacketGenerator(object):
             p = Packet(self.env.now, self.size, self.packets_sent, src=self.id, flow_id=self.flow_id)
             p.ltime = p.size / self.link_rate
             p.arrival[1] = self.env.now + p.ltime
-            p.departure[p.id] = self.env.now
+            p.departure[0] = self.env.now
             print(p)
             self.packets_sent += 1
             # if self.window >= 4:
