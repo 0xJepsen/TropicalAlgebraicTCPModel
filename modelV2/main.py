@@ -16,7 +16,7 @@ def constArrival2():
 # def distSize():
 #     return expovariate(0.01)
 distSize =10
-SWITCH_BANDWIDTH =50
+SWITCH_BANDWIDTH =10
 LINK_BANDWIDTH =10
 SWITCH_QSIZE =50
 SIM_TIME = 25
@@ -41,6 +41,7 @@ env.run(until=SIM_TIME)
 
 # pprint(ps.data)
 df = pd.DataFrame.from_dict(ps.data)
+df = df.transpose()
 print(df.head())
 print(
     "recieved: {}, s1 dropped {}, s2 dropped {}, sent {}".format(

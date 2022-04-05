@@ -10,8 +10,6 @@ import copy
 from simpy.core import BoundClass
 from simpy.resources import base
 from heapq import heappush, heappop
-from Modelingfncs import delay
-
 
 class Packet(object):
     """ A very simple class that represents a packet.
@@ -85,10 +83,13 @@ class PacketGenerator(object):
         self.window = 1
         self.init = True
         self.acks = 0
+        self.last_sent = None
+        self.last_received = None
 
     def run(self):
         """The generator function used in simulations.
         """
+    # V_n = {1, 1, 2, 2, 2, 3, 3, 3, 3, 4, 1, 1, 2, 2, 2, 3, 3, 3, 3}
         yield self.env.timeout(self.initial_delay)
         while self.env.now < self.finish:
             if self.init:
@@ -96,6 +97,8 @@ class PacketGenerator(object):
                 self.init = False
             else:
                 msg = yield self.store.get()
+                self.last_received = msg.id
+                print(self.last_received)
                 print(msg)
                 yield self.env.timeout(3)
                 self.acks += 1
@@ -105,14 +108,16 @@ class PacketGenerator(object):
                     self.gen_packets()
                     self.acks = 0
 
+
     def gen_packets(self):
         p = Packet(self.env.now, self.size, self.packets_sent, src=self.id, flow_id=self.flow_id)
         p.ltime = p.size / self.link_rate
-        p.arrival[0] = self.env.now + p.ltime
-        p.departure[0] = self.env.now
+        p.departure[0] = round(self.env.now, 3)
         print(p)
         self.packets_sent += 1
+        self.last_sent = p.id
         self.out.put(p)
+        self.env.timeout(p.ltime)
 
     def put(self, pkt):
         return pkt
@@ -167,6 +172,8 @@ class PacketSink(object):
     def put(self, pkt):
         if not self.selector or self.selector(pkt):
             now = self.env.now
+            print("current Time: ", now)
+            pkt.arrival[3] = self.env.now
             if self.rec_waits:
                 self.waits.append(self.env.now - pkt.time)
             if self.rec_arrivals:
@@ -182,7 +189,6 @@ class PacketSink(object):
                 "departures": pkt.departure,
                 "link time": pkt.ltime,
             }
-            print("testing Line 183")
             self.out.store.put(pkt)
             if self.debug:
                 print(pkt)
@@ -226,9 +232,10 @@ class SwitchPort(object):
             msg = (yield self.store.get())
             self.busy = 1
             self.byte_size -= msg.size
-            yield self.env.timeout(msg.size / self.rate)
-            msg.departure[self.id] = self.env.now
-            msg.arrival[self.id] = msg.departure[self.id] + msg.ltime
+            yield self.env.timeout(msg.ltime)  # link time
+            msg.arrival[self.id] = round(self.env.now, 3)
+            yield self.env.timeout(msg.size / self.rate)  # processing time
+            msg.departure[self.id] = round(self.env.now, 3)
             self.out.put(msg)
             self.busy = 0
             if self.debug:
@@ -248,6 +255,7 @@ class SwitchPort(object):
             self.packets_drop += 1
         else:
             self.byte_size = tmp_byte_count
+            # yield self.env.timeout(pkt.size / self.rate)
             return self.store.put(pkt)
 
 
