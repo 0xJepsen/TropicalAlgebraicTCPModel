@@ -18,7 +18,7 @@ distSize =10
 SWITCH_BANDWIDTH =10
 LINK_BANDWIDTH =10
 SWITCH_QSIZE =50
-SIM_TIME = 25
+SIM_TIME = 50
 
 V_n = {1, 1, 2, 2, 2, 3, 3, 3, 3, 4, 1, 1, 2, 2, 2, 3, 3, 3, 3}
 
@@ -47,3 +47,5 @@ print(
         ps.packets_rec, s1.packets_drop, s2.packets_drop, pg.packets_sent
     )
 )
+# print(df['departures'][0])
+y_k_0  = df['departures'][0]

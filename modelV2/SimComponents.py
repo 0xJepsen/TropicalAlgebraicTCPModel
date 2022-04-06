@@ -42,7 +42,7 @@ class Packet(object):
         self.ltime = 0
         self.arrival = {}
         self.departure = {}
-        self.experienced_Window_size = 0
+        self.v_n = 0
 
     def __repr__(self):
         return "id: {}, src: {}, time: {}, size: {}". \
@@ -89,6 +89,8 @@ class PacketGenerator(object):
         self.last_received = None
         self.max_window = 4
         self.sent_per_window = 0
+        self.next_window = 1
+        self.seen_ack = []
 
     def run(self):
         """The generator function used in simulations.
@@ -98,30 +100,67 @@ class PacketGenerator(object):
         while self.env.now < self.finish:
             if self.init:
                 p = self.gen_packets()
-                print("Window Size Experienced by packet 0: ", self.window)
-                p.experienced_Window_size = self.window
+                print("V_n for packet 0: ", self.window)
+                p.v_n = self.window
                 self.init = False
-            else:
-                if self.sent_per_window <= self.window:
+                # first ack
+                msg = yield self.store.get()
+                self.last_received = msg.id
+                self.seen_ack.append(msg.id)
+                yield self.env.timeout(5)
+                self.acks += 1
+            while self.sent_per_window <= self.window:
+                print("Sent per window: ", self.sent_per_window)
+                print("Last Recieved: ", self.last_received)
+                print("current Window: ", self.window)
+                print("Recieved v_n: ", msg.v_n)
+                print("N: ", self.last_sent +1)
+                print("last send V_n: ", p.v_n)
+                print(self.last_sent +1 - p.v_n)
+                print(self.seen_ack)
+                if (self.last_sent +1 - p.v_n) in self.seen_ack:
                     p = self.gen_packets()
-                    print('window Size experienced by packet {}: {}'.format(p.id, self.window))
-                    p.experienced_Window_size = self.window
+                    p.v_n = self.window
+                    print("packet V_n: ", p.v_n)
+                    print("Sent per window: ", self.sent_per_window)
                 else:
                     msg = yield self.store.get()
                     self.last_received = msg.id
-                    # print(self.last_received)
-                    # print(self.env.now)
                     yield self.env.timeout(5)
-                    # print(self.env.now)
+                    self.seen_ack.append(msg.id)
                     self.acks += 1
-                    # print("Sent per Window: ", self.sent_per_window)
-                    if self.acks == self.window:
-                        self.window += 1
-                        self.acks = 0
-                        self.sent_per_window = 0
+                    print("Recieved msg id: ", self.last_received)
 
-                if self.window == self.max_window:
-                    self.window = 1
+                if self.sent_per_window == self.window + 1:
+                    print("increasing next window size")
+                    self.window += 1
+                    self.next_window += 1
+                    self.sent_per_window = 0
+
+                print("end")
+            # elif self.sent_per_window == self.window +1:
+            #     self.window = self.next_window
+            #     self.next_window +=1
+            #     self.sent_per_window = 0
+            # if self.sent_per_window <=  self.window:
+            #     p = self.gen_packets()
+            #     print('window Size experienced by packet {}: {}'.format(p.id, self.window))
+            #     p.experienced_Window_size = self.window
+            # else:
+            #     msg = yield self.store.get()
+            #     self.last_received = msg.id
+            #     # print(self.last_received)
+            #     # print(self.env.now)
+            #     yield self.env.timeout(5)
+            #     # print(self.env.now)
+            #     self.acks += 1
+            #     # print("Sent per Window: ", self.sent_per_window)
+            #     if self.acks == self.window:
+            #         self.window += 1
+            #         self.acks = 0
+            #         self.sent_per_window = 0
+            # if self.window == self.max_window:
+            #     self.window = 1
 
     def gen_packets(self):
         p = Packet(self.env.now, self.size, self.packets_sent, src=self.id, flow_id=self.flow_id)
@@ -208,7 +247,7 @@ class PacketSink(object):
                 "arrivals": pkt.arrival,
                 "departures": pkt.departure,
                 "link time": pkt.ltime,
-                "Experienced Window size": pkt.experienced_Window_size,
+                "V_n": pkt.v_n,
             }
 
             if self.debug:
