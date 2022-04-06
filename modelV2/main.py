@@ -28,9 +28,10 @@ env = simpy.Environment()  # Create the SimPy environment
 pg = PacketGenerator(
     env, "Generator", constArrival, distSize, LINK_BANDWIDTH
 )
-ps = PacketSink(env, SWITCH_BANDWIDTH)  # debugging enable for simple output
 s1 = SwitchPort(1, env, rate=SWITCH_BANDWIDTH, qlimit=SWITCH_QSIZE)
 s2 = SwitchPort(2, env, rate=SWITCH_BANDWIDTH, qlimit=SWITCH_QSIZE)
+ps = PacketSink(3, env, rate=SWITCH_BANDWIDTH, qlimit=SWITCH_QSIZE)
+
 # Wire packet generators and sink together
 pg.out = s1
 s1.out = s2

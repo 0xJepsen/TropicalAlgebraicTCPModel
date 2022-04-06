@@ -107,18 +107,24 @@ class PacketGenerator(object):
                 msg = yield self.store.get()
                 self.last_received = msg.id
                 self.seen_ack.append(msg.id)
-                yield self.env.timeout(5)
+                print("Recieved message: ", msg.id)
+                print(self.env.now)
+                yield self.env.timeout(3)
+                print(self.env.now)
+
                 self.acks += 1
+            print("sent per window: ", self.sent_per_window)
+            print("window: ", self.window)
             while self.sent_per_window <= self.window:
                 print("Sent per window: ", self.sent_per_window)
                 print("Last Recieved: ", self.last_received)
                 print("current Window: ", self.window)
                 print("Recieved v_n: ", msg.v_n)
-                print("N: ", self.last_sent +1)
+                print("N: ", self.last_sent + 1)
                 print("last send V_n: ", p.v_n)
-                print(self.last_sent +1 - p.v_n)
+                print(self.last_sent + 1 - p.v_n)
                 print(self.seen_ack)
-                if (self.last_sent +1 - p.v_n) in self.seen_ack:
+                if (self.last_sent + 1 - p.v_n) in self.seen_ack:
                     p = self.gen_packets()
                     p.v_n = self.window
                     print("packet V_n: ", p.v_n)
@@ -126,10 +132,12 @@ class PacketGenerator(object):
                 else:
                     msg = yield self.store.get()
                     self.last_received = msg.id
-                    yield self.env.timeout(5)
+                    yield self.env.timeout(3)
                     self.seen_ack.append(msg.id)
                     self.acks += 1
                     print("Recieved msg id: ", self.last_received)
+                    # print("Recieved msg Y_k: ", msg.departure[4])
+                    print("Current Time: ", self.env.now)
 
                 if self.sent_per_window == self.window + 1:
                     print("increasing next window size")
@@ -138,29 +146,6 @@ class PacketGenerator(object):
                     self.sent_per_window = 0
 
                 print("end")
-            # elif self.sent_per_window == self.window +1:
-            #     self.window = self.next_window
-            #     self.next_window +=1
-            #     self.sent_per_window = 0
-            # if self.sent_per_window <=  self.window:
-            #     p = self.gen_packets()
-            #     print('window Size experienced by packet {}: {}'.format(p.id, self.window))
-            #     p.experienced_Window_size = self.window
-            # else:
-            #     msg = yield self.store.get()
-            #     self.last_received = msg.id
-            #     # print(self.last_received)
-            #     # print(self.env.now)
-            #     yield self.env.timeout(5)
-            #     # print(self.env.now)
-            #     self.acks += 1
-            #     # print("Sent per Window: ", self.sent_per_window)
-            #     if self.acks == self.window:
-            #         self.window += 1
-            #         self.acks = 0
-            #         self.sent_per_window = 0
-            # if self.window == self.max_window:
-            #     self.window = 1
 
     def gen_packets(self):
         p = Packet(self.env.now, self.size, self.packets_sent, src=self.id, flow_id=self.flow_id)
@@ -200,58 +185,60 @@ class PacketSink(object):
 
     """
 
-    def __init__(self,
-                 env,
-                 rate,
-                 rec_arrivals=False,
-                 absolute_arrivals=False,
-                 rec_waits=True,
-                 debug=False,
-                 selector=None
-                 ):
+    def __init__(self, id, env, rate, qlimit=None, limit_bytes=True, debug=False):
+        self.id = id
         self.store = simpy.Store(env)
-        self.env = env
-        self.rec_waits = rec_waits
-        self.rec_arrivals = rec_arrivals
-        self.absolute_arrivals = absolute_arrivals
-        self.waits = []
-        self.arrivals = []
-        self.debug = debug
-        self.packets_rec = 0
-        self.bytes_rec = 0
-        self.selector = selector
-        self.last_arrival = 0.0
-        self.out = None
-        self.data = {}
         self.rate = rate
+        self.env = env
+        self.out = None
+        self.packets_rec = 0
+        self.packets_drop = 0
+        self.qlimit = qlimit
+        self.limit_bytes = limit_bytes
+        self.byte_size = 0  # Current size of the queue in bytes
+        self.debug = debug
+        self.busy = 0  # Used to track if a packet is currently being sent
+        self.data = {}
+        self.action = env.process(self.run())  # starts the run() method as a SimPy process
+
+
+    def run(self):
+        while True:
+            msg = (yield self.store.get())
+            self.busy = 1
+            self.byte_size -= msg.size
+            yield self.env.timeout(msg.ltime)  # link time
+            msg.arrival[self.id] = round(self.env.now, 3)
+            yield self.env.timeout(msg.size / self.rate)  # processing time
+            msg.departure[self.id] = round(self.env.now, 3)
+            self.data[msg.id] = {
+                "arrivals": msg.arrival,
+                "departures": msg.departure,
+                "link time": msg.ltime,
+                "V_n": msg.v_n,
+            }
+            self.out.store.put(msg)
+            if self.debug:
+                print(msg)
+
+    def set_arival(self, pkt):
+        pkt.arrival[self.id] = round(self.env.now, 3)
 
     def put(self, pkt):
-        if not self.selector or self.selector(pkt):
-            now = self.env.now
-            # print("current Time: ", now)
-            pkt.arrival[3] = self.env.now + 1
-            if self.rec_waits:
-                self.waits.append(self.env.now - pkt.time)
-            if self.rec_arrivals:
-                if self.absolute_arrivals:
-                    self.arrivals.append(now)
-                else:
-                    self.arrivals.append(now - self.last_arrival)
-                self.last_arrival = now
-            self.packets_rec += 1
-            self.bytes_rec += pkt.size
-            pkt.departure[4] = self.env.now + 2
-            # yield self.env.timeout(pkt.size / self.rate)
-            self.out.store.put(pkt)
-            self.data[pkt.id] = {
-                "arrivals": pkt.arrival,
-                "departures": pkt.departure,
-                "link time": pkt.ltime,
-                "V_n": pkt.v_n,
-            }
+        self.packets_rec += 1
+        tmp_byte_count = self.byte_size + pkt.size
+        if self.qlimit is None:
+            self.byte_size = tmp_byte_count
+            return self.store.put(pkt)
+        if self.limit_bytes and tmp_byte_count >= self.qlimit:
+            self.packets_drop += 1
+            return
+        elif not self.limit_bytes and len(self.store.items) >= self.qlimit - 1:
+            self.packets_drop += 1
+        else:
+            self.byte_size = tmp_byte_count
+            return self.store.put(pkt)
 
-            if self.debug:
-                print(pkt)
 
 
 class SwitchPort(object):
