@@ -18,7 +18,7 @@ distSize =10
 SWITCH_BANDWIDTH =10
 LINK_BANDWIDTH =10
 SWITCH_QSIZE =50
-SIM_TIME = 50
+SIM_TIME = 75
 
 V_n = {1, 1, 2, 2, 2, 3, 3, 3, 3, 4, 1, 1, 2, 2, 2, 3, 3, 3, 3}
 
