@@ -11,6 +11,7 @@ from simpy.core import BoundClass
 from simpy.resources import base
 from heapq import heappush, heappop
 
+
 class Packet(object):
     """ A very simple class that represents a packet.
         This packet will run through a queue at a switch output port.
@@ -81,7 +82,7 @@ class PacketGenerator(object):
         self.packets_sent = 0
         self.action = env.process(self.run())  # starts the run() method as a SimPy process
         self.flow_id = flow_id
-        self.window = 1        # slow start
+        self.window = 1  # slow start
         self.init = True
         self.acks = 0
         self.last_sent = None
@@ -92,7 +93,7 @@ class PacketGenerator(object):
     def run(self):
         """The generator function used in simulations.
         """
-    # V_n = {1, 1, 2, 2, 2, 3, 3, 3, 3, 4, 1, 1, 2, 2, 2, 3, 3, 3, 3}
+        # V_n = {1, 1, 2, 2, 2, 3, 3, 3, 3, 4, 1, 1, 2, 2, 2, 3, 3, 3, 3}
         yield self.env.timeout(self.initial_delay)
         while self.env.now < self.finish:
             if self.init:
@@ -104,24 +105,21 @@ class PacketGenerator(object):
                 if self.sent_per_window <= self.window:
                     p = self.gen_packets()
                     print('window Size experienced by packet {}: {}'.format(p.id, self.window))
+                    p.experienced_Window_size = self.window
                 else:
                     msg = yield self.store.get()
                     self.last_received = msg.id
                     # print(self.last_received)
                     yield self.env.timeout(4)
                     self.acks += 1
-                    print("Acks: ", self.acks)
-                    print("Window: ", self.window)
+                    # print("Sent per Window: ", self.sent_per_window)
                     if self.acks == self.window:
-                        self.window +=1
+                        self.window += 1
                         self.acks = 0
                         self.sent_per_window = 0
 
-
                 if self.window == self.max_window:
                     self.window = 1
-                    print("First Condition: ", (self.window == self.max_window))
-
 
     def gen_packets(self):
         p = Packet(self.env.now, self.size, self.packets_sent, src=self.id, flow_id=self.flow_id)
@@ -129,7 +127,7 @@ class PacketGenerator(object):
         p.departure[0] = round(self.env.now, 3)
         print(p)
         self.packets_sent += 1
-        self.sent_per_window +=1
+        self.sent_per_window += 1
         self.last_sent = p.id
         self.out.put(p)
         self.env.timeout(p.ltime)
@@ -201,13 +199,14 @@ class PacketSink(object):
                 self.last_arrival = now
             self.packets_rec += 1
             self.bytes_rec += pkt.size
-            pkt.departure[4] = self.env.now +1
+            pkt.departure[4] = self.env.now + 1
             # yield self.env.timeout(pkt.size / self.rate)
             self.out.store.put(pkt)
             self.data[pkt.id] = {
                 "arrivals": pkt.arrival,
                 "departures": pkt.departure,
                 "link time": pkt.ltime,
+                "Experienced Window size": pkt.experienced_Window_size,
             }
 
             if self.debug:
