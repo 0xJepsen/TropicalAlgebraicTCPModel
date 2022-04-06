@@ -110,7 +110,9 @@ class PacketGenerator(object):
                     msg = yield self.store.get()
                     self.last_received = msg.id
                     # print(self.last_received)
-                    yield self.env.timeout(4)
+                    # print(self.env.now)
+                    yield self.env.timeout(5)
+                    # print(self.env.now)
                     self.acks += 1
                     # print("Sent per Window: ", self.sent_per_window)
                     if self.acks == self.window:
@@ -199,7 +201,7 @@ class PacketSink(object):
                 self.last_arrival = now
             self.packets_rec += 1
             self.bytes_rec += pkt.size
-            pkt.departure[4] = self.env.now + 1
+            pkt.departure[4] = self.env.now + 2
             # yield self.env.timeout(pkt.size / self.rate)
             self.out.store.put(pkt)
             self.data[pkt.id] = {
