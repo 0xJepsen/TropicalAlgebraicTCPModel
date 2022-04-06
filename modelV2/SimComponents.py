@@ -41,6 +41,7 @@ class Packet(object):
         self.ltime = 0
         self.arrival = {}
         self.departure = {}
+        self.experienced_Window_size = 0
 
     def __repr__(self):
         return "id: {}, src: {}, time: {}, size: {}". \
@@ -80,11 +81,13 @@ class PacketGenerator(object):
         self.packets_sent = 0
         self.action = env.process(self.run())  # starts the run() method as a SimPy process
         self.flow_id = flow_id
-        self.window = 1
+        self.window = 1        # slow start
         self.init = True
         self.acks = 0
         self.last_sent = None
         self.last_received = None
+        self.max_window = 4
+        self.sent_per_window = 0
 
     def run(self):
         """The generator function used in simulations.
@@ -93,20 +96,31 @@ class PacketGenerator(object):
         yield self.env.timeout(self.initial_delay)
         while self.env.now < self.finish:
             if self.init:
-                self.gen_packets()
+                p = self.gen_packets()
+                print("Window Size Experienced by packet 0: ", self.window)
+                p.experienced_Window_size = self.window
                 self.init = False
             else:
-                msg = yield self.store.get()
-                self.last_received = msg.id
-                print(self.last_received)
-                print(msg)
-                yield self.env.timeout(3)
-                self.acks += 1
-                print("Acks: ", self.acks)
-                print("Condition: ", (self.acks == self.window))
-                if self.acks == self.window:
-                    self.gen_packets()
-                    self.acks = 0
+                if self.sent_per_window <= self.window:
+                    p = self.gen_packets()
+                    print('window Size experienced by packet {}: {}'.format(p.id, self.window))
+                else:
+                    msg = yield self.store.get()
+                    self.last_received = msg.id
+                    # print(self.last_received)
+                    yield self.env.timeout(4)
+                    self.acks += 1
+                    print("Acks: ", self.acks)
+                    print("Window: ", self.window)
+                    if self.acks == self.window:
+                        self.window +=1
+                        self.acks = 0
+                        self.sent_per_window = 0
+
+
+                if self.window == self.max_window:
+                    self.window = 1
+                    print("First Condition: ", (self.window == self.max_window))
 
 
     def gen_packets(self):
@@ -115,9 +129,11 @@ class PacketGenerator(object):
         p.departure[0] = round(self.env.now, 3)
         print(p)
         self.packets_sent += 1
+        self.sent_per_window +=1
         self.last_sent = p.id
         self.out.put(p)
         self.env.timeout(p.ltime)
+        return p
 
     def put(self, pkt):
         return pkt
@@ -147,6 +163,7 @@ class PacketSink(object):
 
     def __init__(self,
                  env,
+                 rate,
                  rec_arrivals=False,
                  absolute_arrivals=False,
                  rec_waits=True,
@@ -165,15 +182,15 @@ class PacketSink(object):
         self.bytes_rec = 0
         self.selector = selector
         self.last_arrival = 0.0
-        self.store = simpy.Store(env)
         self.out = None
         self.data = {}
+        self.rate = rate
 
     def put(self, pkt):
         if not self.selector or self.selector(pkt):
             now = self.env.now
-            print("current Time: ", now)
-            pkt.arrival[3] = self.env.now
+            # print("current Time: ", now)
+            pkt.arrival[3] = self.env.now + 1
             if self.rec_waits:
                 self.waits.append(self.env.now - pkt.time)
             if self.rec_arrivals:
@@ -184,12 +201,15 @@ class PacketSink(object):
                 self.last_arrival = now
             self.packets_rec += 1
             self.bytes_rec += pkt.size
+            pkt.departure[4] = self.env.now +1
+            # yield self.env.timeout(pkt.size / self.rate)
+            self.out.store.put(pkt)
             self.data[pkt.id] = {
                 "arrivals": pkt.arrival,
                 "departures": pkt.departure,
                 "link time": pkt.ltime,
             }
-            self.out.store.put(pkt)
+
             if self.debug:
                 print(pkt)
 

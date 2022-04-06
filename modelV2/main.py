@@ -1,7 +1,6 @@
 from random import expovariate
 import simpy
 from SimComponents import PacketGenerator, PacketSink, SwitchPort
-from pprint import pprint
 import pandas as pd
 
 
@@ -29,7 +28,7 @@ env = simpy.Environment()  # Create the SimPy environment
 pg = PacketGenerator(
     env, "Generator", constArrival, distSize, LINK_BANDWIDTH
 )
-ps = PacketSink(env)  # debugging enable for simple output
+ps = PacketSink(env, SWITCH_BANDWIDTH)  # debugging enable for simple output
 s1 = SwitchPort(1, env, rate=SWITCH_BANDWIDTH, qlimit=SWITCH_QSIZE)
 s2 = SwitchPort(2, env, rate=SWITCH_BANDWIDTH, qlimit=SWITCH_QSIZE)
 # Wire packet generators and sink together
@@ -42,7 +41,7 @@ env.run(until=SIM_TIME)
 # pprint(ps.data)
 df = pd.DataFrame.from_dict(ps.data)
 df = df.transpose()
-print(df.head())
+print(df)
 print(
     "recieved: {}, s1 dropped {}, s2 dropped {}, sent {}".format(
         ps.packets_rec, s1.packets_drop, s2.packets_drop, pg.packets_sent
