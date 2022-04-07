@@ -9,45 +9,48 @@ def sigma():
     return 1
 
 
-def initialize(number_of_packers, number_of_routers):
-    return
-
-
 def Y_i(init, number_of_packets, number_of_routers, max_window):
+    """ This generates the vectors Y(n) for each packet n consisting of the departure times
+        of packet n from router i for 0<=i<=k where k is the number of routers.
+        This implements equations
+        y_o(n) = Y_K(n - v_n-1) + d_(K,0)
+        y_i(n) = [max(y_i-1(n) + d_(i-1,i), y_i(n-1)] + sigma_i(n)
+        Parameters
+        ----------
+        init : float
+            the time the packet arrives at the output queue.
+        number_of_packets : float
+            the size of the packet in bytes
+        number_of_routers : int
+            an identifier for the packet
+        max_window: int
+            identifiers for source and destination
+        """
     sent = 0
     running_window = 1
     for j in range(0, number_of_packets + 1):
-        print("Top j: ", j)
         for i in range(0, number_of_routers + 1):
-            print("Top i: ", i)
             if i == 0:
                 if j == 0:
-                    init[j] = [0]
-
+                    init[j] = {0: 0}
+                    """first packet depart time"""
                 else:
-                    print("running Window: ", running_window)
-                    print("j: ", j)
-                    print("init[j-running window][number_of_routers]: ", init[j - running_window][number_of_routers])
-                    init[j] = [init[j - running_window][number_of_routers] + delay(number_of_routers, 0)]
-                    print("Sent: ", sent)
-                    sent +=1
-                    print("Sent after increment: ", sent)
+                    """y_o(n) = Y_K(n - v_n-1) + d_(K,0)"""
+                    init[j] = {0: init[j - running_window][number_of_routers] + delay(number_of_routers, 0)}
+                    sent += 1
             else:
-                # if init[j][0] == init[j-1][0]:
-                #     init[j].append(init[j][i - 1] + delay(i - 1, i) + sigma())
-                print("i: ", i)
-                print("j: ", j)
-                print("Time left last router: ", init[j][i - 1])
-                print("term one: ", init[j][i - 1] + delay(i - 1, i))
-                if j-1 == -1:
+                if j - 1 == -1:
                     the_max = max(init[j][i - 1] + delay(i - 1, i), 0)
-                else: the_max = max(init[j][i - 1] + delay(i - 1, i), init[j-1][i])
-                init[j].append(the_max + sigma())
-            print("Sent outside: ", sent)
+                    """Edge case for packet 0"""
+                else:
+                    the_max = max(init[j][i - 1] + delay(i - 1, i), init[j - 1][i])
+                    """y_i(n) = [max(y_i-1(n) + d_(i-1,i), y_i(n-1)]"""
+                init[j][i] = the_max + sigma()
+
             if running_window == max_window:
                 running_window = 0
-            if sent == running_window +1:
-                running_window +=1
+            if sent == running_window + 1:
+                running_window += 1
                 sent = 0
     return init
 

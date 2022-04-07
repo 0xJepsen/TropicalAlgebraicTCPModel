@@ -43,7 +43,7 @@ def main():
     ps.out = pg
     env.run(until=SIM_TIME)
 
-    # pprint(ps.data)
+    pprint(ps.data[1]['departures'][0])
     df = pd.DataFrame.from_dict(ps.data)
     df = df.transpose()
     print(df)
@@ -52,36 +52,8 @@ def main():
             ps.packets_rec, s1.packets_drop, s2.packets_drop, pg.packets_sent
         )
     )
-    print(df['departures'][0][0])
 
-    # departure = [[df['departures'][0][0]]]
-    # print(departure[0][0])
-    # for i in range(0, 3):
-    #     print("i: ", i)
-    #     departure[0].append(Y_i(departure[0][i], 0))
-    #
-    # pprint(departure)
-    #
-    # packet_1 = [departure[0][3] + 3]
-    # for i in range(0,3):
-    #     packet_1.append(Y_i(packet_1[i], 1))
-    # pprint(packet_1)
 
-    # for j in range(0, ps.packets_rec -2):
-    #     for i in range(0, 3):
-    #         print("i: ", i)
-    #         departure[j].append(Y_i(departure[j][i], j))
-    #         if i == 2:
-    #             # print(departure[0][i+1])
-    #             departure.append([departure[0][i+1] + 3])
-    # print(departure)
-    # print(y_1_0)
-    # y_2_0 = Y_i(y_1_0, 0)
-    # print(y_2_0)
-    # y_3_0 = Y_i(y_2_0, 0)
-    # print(y_3_0)
-
-    # y_0_1 =
 
 if __name__ == '__main__':
     main()
