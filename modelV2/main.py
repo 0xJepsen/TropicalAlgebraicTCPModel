@@ -4,6 +4,7 @@ from SimComponents import PacketGenerator, PacketSink, SwitchPort
 from Modelingfncs import Make_Y, delay
 import pandas as pd
 from pprint import pprint
+import matplotlib.pyplot as plt
 
 
 def constArrival():  # Constant arrival distribution for generator 1
@@ -20,7 +21,7 @@ distSize = 10
 SWITCH_BANDWIDTH = 10
 LINK_BANDWIDTH = 10
 SWITCH_QSIZE = 50
-SIM_TIME = 50
+SIM_TIME = 200
 
 V_n = {1, 1, 2, 2, 2, 3, 3, 3, 3, 4, 1, 1, 2, 2, 2, 3, 3, 3, 3}
 
@@ -50,30 +51,36 @@ def main():
     )
     df = pd.DataFrame.from_dict(ps.data)
     df_simulated = df.transpose()
+    pprint(df_simulated.head())
 
     """Logic for error extraction of Y_n"""
     df_simulated_departures = df_simulated.loc[:, ["departures"]]
-    print(df_simulated_departures)
+    print("---------- Simulated Departure Data ----------")
+    pprint(df_simulated_departures.head())
 
     init = {}
     generated_departures = Make_Y(init, ps.packets_rec - 1, 3, 4)
     df_generated = pd.DataFrame.from_dict(generated_departures, orient='index')
-    pprint(df_generated)
+    print("---------- Generated Departure Data ----------")
+    pprint(df_generated.head())
 
-    print(len(df_generated))
-    print(df_generated.values[0][0][0])
-    print(df_simulated_departures.values[0][0][0])
 
     errors = {}
     for i in range(0, ps.packets_rec):
         errors[i] = {}
         for j in range(0, 4):
-            errors[i]['Router {}'.format(j)] = abs(df_generated.values[i][0][j] - df_simulated_departures.values[i][0][j])
+            errors[i]['Router {}'.format(j)] = abs(
+                df_generated.values[i][0][j] - df_simulated_departures.values[i][0][j])
 
-    pprint(errors)
     df_errors = pd.DataFrame.from_dict(errors, orient='index')
+    df_errors["sum"] = df_errors.sum(axis=1)
 
-    pprint(df_errors)
+    print("---------- Error In Departure Times ----------")
+    pprint(df_errors.head())
+    ax = df_errors.plot()
+    ax.set_ylabel('Quantity of Error')
+    ax.set_xlabel('Packet Number')
+    # plt.show()
 
 
 if __name__ == '__main__':
