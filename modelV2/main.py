@@ -20,7 +20,7 @@ distSize = 10
 SWITCH_BANDWIDTH = 10
 LINK_BANDWIDTH = 10
 SWITCH_QSIZE = 50
-SIM_TIME = 75
+SIM_TIME = 50
 
 V_n = {1, 1, 2, 2, 2, 3, 3, 3, 3, 4, 1, 1, 2, 2, 2, 3, 3, 3, 3}
 
@@ -43,19 +43,37 @@ def main():
     ps.out = pg
     env.run(until=SIM_TIME)
 
-    pprint(ps.data)
-    df = pd.DataFrame.from_dict(ps.data)
-    dfsimluted = df.transpose()
-    print(dfsimluted.loc[:, ["departures"]])
     print(
-        "recieved: {}, s1 dropped {}, s2 dropped {}, sent {}".format(
+        "received: {}, s1 dropped {}, s2 dropped {}, sent {}".format(
             ps.packets_rec, s1.packets_drop, s2.packets_drop, pg.packets_sent
         )
     )
+    df = pd.DataFrame.from_dict(ps.data)
+    df_simulated = df.transpose()
+
+    """Logic for error extraction of Y_n"""
+    df_simulated_departures = df_simulated.loc[:, ["departures"]]
+    print(df_simulated_departures)
+
     init = {}
-    generated_departures = Make_Y(init, ps.packets_rec -1, 3, 4)
-    dfgenerated = pd.DataFrame.from_dict(generated_departures, orient='index')
-    pprint((dfgenerated))
+    generated_departures = Make_Y(init, ps.packets_rec - 1, 3, 4)
+    df_generated = pd.DataFrame.from_dict(generated_departures, orient='index')
+    pprint(df_generated)
+
+    print(len(df_generated))
+    print(df_generated.values[0][0][0])
+    print(df_simulated_departures.values[0][0][0])
+
+    errors = {}
+    for i in range(0, ps.packets_rec):
+        errors[i] = {}
+        for j in range(0, 4):
+            errors[i]['Router {}'.format(j)] = abs(df_generated.values[i][0][j] - df_simulated_departures.values[i][0][j])
+
+    pprint(errors)
+    df_errors = pd.DataFrame.from_dict(errors, orient='index')
+
+    pprint(df_errors)
 
 
 if __name__ == '__main__':
