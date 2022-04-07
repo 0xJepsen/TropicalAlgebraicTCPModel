@@ -114,14 +114,6 @@ class PacketGenerator(object):
 
                 self.acks += 1
             while self.sent_per_window <= self.window:
-                # print("Sent per window: ", self.sent_per_window)
-                # print("Last Recieved: ", self.last_received)
-                # print("current Window: ", self.window)
-                # print("Recieved v_n: ", msg.v_n)
-                # print("N: ", self.last_sent + 1)
-                # print("last send V_n: ", p.v_n)
-                # print(self.last_sent + 1 - p.v_n)
-                # print(self.seen_ack)
                 if (self.last_sent + 1 - p.v_n) in self.seen_ack:
                     p = self.gen_packets()
                     p.v_n = self.window
@@ -138,7 +130,6 @@ class PacketGenerator(object):
                     self.seen_ack.append(msg.id)
                     self.acks += 1
                     print("Recieved msg id: ", self.last_received)
-                    # print("Recieved msg Y_k: ", msg.departure[4])
                     print("Current Time: ", self.env.now)
                 if self.window == self.max_window and self.sent_per_window > 0:
                     self.window = 1
@@ -154,7 +145,7 @@ class PacketGenerator(object):
     def gen_packets(self):
         p = Packet(self.env.now, self.size, self.packets_sent, src=self.id, flow_id=self.flow_id)
         p.ltime = p.size / self.link_rate
-        p.departure[0] = round(self.env.now, 3)
+        p.departure[0] = int(self.env.now)
         print(p)
         self.packets_sent += 1
         self.sent_per_window += 1
@@ -212,9 +203,9 @@ class PacketSink(object):
             self.busy = 1
             self.byte_size -= msg.size
             yield self.env.timeout(msg.ltime)  # link time
-            msg.arrival[self.id] = round(self.env.now, 3)
+            msg.arrival[self.id] = int(self.env.now)
             yield self.env.timeout(msg.size / self.rate)  # processing time
-            msg.departure[self.id] = round(self.env.now, 3)
+            msg.departure[self.id] = int(self.env.now)
             self.packets_rec += 1
             self.data[msg.id] = {
                 "arrivals": msg.arrival,
@@ -272,9 +263,9 @@ class SwitchPort(object):
             self.busy = 1
             self.byte_size -= msg.size
             yield self.env.timeout(msg.ltime)  # link time
-            msg.arrival[self.id] = round(self.env.now, 3)
+            msg.arrival[self.id] = int(self.env.now)
             yield self.env.timeout(msg.size / self.rate)  # processing time
-            msg.departure[self.id] = round(self.env.now, 3)
+            msg.departure[self.id] = int(self.env.now)
             self.out.put(msg)
             self.busy = 0
             if self.debug:

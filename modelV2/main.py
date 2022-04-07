@@ -1,7 +1,7 @@
 from random import expovariate
 import simpy
 from SimComponents import PacketGenerator, PacketSink, SwitchPort
-# from Modelingfncs import Y_i, delay
+from Modelingfncs import Make_Y, delay
 import pandas as pd
 from pprint import pprint
 
@@ -43,16 +43,19 @@ def main():
     ps.out = pg
     env.run(until=SIM_TIME)
 
-    pprint(ps.data[1]['departures'][0])
+    pprint(ps.data)
     df = pd.DataFrame.from_dict(ps.data)
-    df = df.transpose()
-    print(df)
+    dfsimluted = df.transpose()
+    print(dfsimluted.loc[:, ["departures"]])
     print(
         "recieved: {}, s1 dropped {}, s2 dropped {}, sent {}".format(
             ps.packets_rec, s1.packets_drop, s2.packets_drop, pg.packets_sent
         )
     )
-
+    init = {}
+    generated_departures = Make_Y(init, ps.packets_rec -1, 3, 4)
+    dfgenerated = pd.DataFrame.from_dict(generated_departures, orient='index')
+    pprint((dfgenerated))
 
 
 if __name__ == '__main__':
