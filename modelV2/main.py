@@ -23,7 +23,7 @@ LINK_BANDWIDTH = 10
 SWITCH_QSIZE = 50
 SIM_TIME = 200
 
-V_n = {1, 1, 2, 2, 2, 3, 3, 3, 3, 4, 1, 1, 2, 2, 2, 3, 3, 3, 3}
+# V_n = {1, 1, 2, 2, 2, 3, 3, 3, 3, 4, 1, 1, 2, 2, 2, 3, 3, 3, 3}
 
 env = simpy.Environment()  # Create the SimPy environment
 
@@ -80,7 +80,7 @@ def main():
     ax = df_errors.plot()
     ax.set_ylabel('Quantity of Error')
     ax.set_xlabel('Packet Number')
-    # plt.show()
+    plt.show()
 
 
 if __name__ == '__main__':
