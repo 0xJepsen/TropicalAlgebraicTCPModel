@@ -123,12 +123,31 @@ def MPrime_init(packet_number, number_of_routers):
         for j in range(number_of_routers):
             if j == number_of_routers - 1:
                 for k in range(1, i + 1):
-                    Mprime[i, j] += delay(k-1, k)
+                    Mprime[i, j] += delay(k - 1, k)
                     Mprime[i, j] += sigma()
-                Mprime[i, j] += delay(number_of_routers -1, 0) # index from zero on routers
-            if j < number_of_routers -1:
+                Mprime[i, j] += delay(number_of_routers - 1, 0)  # index from zero on routers
+            if j < number_of_routers - 1:
                 Mprime[i, j] = float("-inf")
     return Mprime
+
+
+def D_init(max_window, number_of_routers):
+    """ This generates Matrix D given a max window size w* and number of routers in the model K.
+        D is a matrix of dimension Kw* with all its indices equal to -inf except those of the form
+        D_(K+i, i), i = 1,..., K(w* -1) which are all equal to 0
+        In the current implementation all sigma's are = 1 and all delays from router to router are 1
+        Parameters
+        ----------
+        max_window : int
+            The maximum window size the model achieves
+        number_of_routers : int
+            Number of routers in the model.
+        """
+    kw = max_window * number_of_routers
+    d = Matrix(dims=(kw, kw), fill=float("-inf"))
+    for i in range(kw - number_of_routers):
+        d[number_of_routers+i, i] = 0
+    return d
 
 
 Z_test = Z_init(0, 4, 3)
@@ -139,3 +158,6 @@ print(M_test)
 
 Mprime_test = MPrime_init(0, 4)
 print(Mprime_test)
+
+D_test = D_init(4, 4)
+print(D_test)
