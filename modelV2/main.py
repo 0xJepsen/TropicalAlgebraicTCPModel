@@ -69,8 +69,7 @@ def main():
     print("---------- Simulated Departure Data ----------")
     # pprint(df_simulated_departures.head())
 
-    init = {}
-    generated_departures = Make_Y(init, ps.packets_rec - 1, 3, 4)
+    generated_departures = Make_Y(ps.packets_rec - 1, 3, 4)
     df_generated = pd.DataFrame.from_dict(generated_departures, orient='index')
     print("---------- Generated Departure Data ----------")
     pprint(df_generated.iloc[0:12])
