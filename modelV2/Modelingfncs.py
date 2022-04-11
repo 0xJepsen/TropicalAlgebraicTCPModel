@@ -1,4 +1,5 @@
 from pprint import pprint
+from MatrixMath import Matrix
 
 
 def delay(src, dst):
@@ -82,5 +83,33 @@ def Z_init(packet_number, max_window, number_of_routers):
     return z
 
 
+def M_init(packet_number, number_of_routers):
+    """ This generates Matrix M for a given packet number and routers in the model
+        M_i,j = Sum (from k = j to i of sigma_k(n)) + sum from k=j to i-1 of d_(k,k-1) if i>= j
+        and M_i,j = -inf if i<j.
+        In the current implementation all sigma's are = 1 and all delays from router to router are 1
+        Parameters
+        ----------
+        packet_number : int
+            The packet number for which you want the network trace for
+        number_of_routers : int
+            Number of routers in the model.
+        """
+    M = Matrix(dims=(number_of_routers, number_of_routers), fill=0)
+    for i in range(number_of_routers):
+        for j in range(number_of_routers):
+            if i >= j:
+                for _ in range(j, i + 1):
+                    M[i, j] += sigma()
+                for h in range(j, i):
+                    M[i, j] += delay(h, h - 1)
+            else:
+                M[i, j] = float("-inf")
+    return M
+
+
 Z_test = Z_init(0, 4, 3)
 pprint(Z_test)
+
+M_test = M_init(50, 4)
+print(M_test)
