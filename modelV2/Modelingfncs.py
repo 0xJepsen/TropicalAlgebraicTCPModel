@@ -16,12 +16,12 @@ def Make_Y(number_of_packets, number_of_routers, max_window):
         y_i(n) = [max(y_i-1(n) + d_(i-1,i), y_i(n-1)] + sigma_i(n)
         Parameters
         ----------
-        number_of_packets : float
-            the size of the packet in bytes
+        number_of_packets : int
+            The number of packets you want to generate data for
         number_of_routers : int
-            an identifier for the packet
+            The number of routers in the model
         max_window: int
-            identifiers for source and destination
+            The maximum window size in the model
         """
     sent = 0
     running_window = 1
@@ -34,7 +34,8 @@ def Make_Y(number_of_packets, number_of_routers, max_window):
                     """first packet depart time"""
                 else:
                     """y_o(n) = Y_K(n - v_n-1) + d_(K,0)"""
-                    init[j] = {'departures': {0: init[j - running_window]['departures'][number_of_routers] + delay(number_of_routers, 0)}}
+                    init[j] = {'departures': {
+                        0: init[j - running_window]['departures'][number_of_routers] + delay(number_of_routers, 0)}}
                     sent += 1
                     init[j]['V_n'] = running_window
             else:
@@ -54,32 +55,32 @@ def Make_Y(number_of_packets, number_of_routers, max_window):
     return init
 
 
-def Z_init(packet_number, max_window_size, number_of_routers):
+def Z_init(packet_number, max_window, number_of_routers):
     """ This generates the data vector for a specified packet number.
         The Z(n) data vector can be thought of as a number network traces
         equal to the max window size.
+        Z(n) = {Y(n), Y(n-1),..., Y(n - w* +1)}
         Parameters
         ----------
-        init : float
-            the time the packet arrives at the output queue.
-        number_of_packets : float
-            the size of the packet in bytes
+        packet_number : int
+            The packet number for which you want the network trace for
+        max_window : int
+            The maximum window size the model achieves
         number_of_routers : int
-            an identifier for the packet
-        max_window: int
-            identifiers for source and destination
+            Number of routers in the model.
         """
+    z = []
+    trace_components = Make_Y(packet_number, number_of_routers, max_window)
+    bound = packet_number - max_window
+    print("bound: ", bound)
+    for i in range(packet_number, bound, -1):
+        pprint(i)
+        if i < 0:
+            z.append([0, 0, 0, 0])
+        else:
+            z.append(list(trace_components[i]['departures'].values()))
+    return z
 
 
-result = Make_Y(14, 3, 4)
-pprint(result)
-empty = [0] * 4
-Y0 = list(result[0]['departures'].values())
-pprint(Y0)
-Z0 = [Y0]
-print(Z0)
-print(Z0)
-for _ in range(3):
-    Z0.append(empty)
-print(Z0)
-pprint(len(Z0))
+Z_test = Z_init(0, 4, 3)
+pprint(Z_test)
