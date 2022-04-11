@@ -9,16 +9,13 @@ def sigma():
     return 1
 
 
-def Make_Y(init, number_of_packets, number_of_routers, max_window):
+def Make_Y(number_of_packets, number_of_routers, max_window):
     """ This generates the vectors Y(n) for each packet n consisting of the departure times
         of packet n from router i for 0<=i<=k where k is the number of routers.
-        This implements equations
         y_o(n) = Y_K(n - v_n-1) + d_(K,0)
         y_i(n) = [max(y_i-1(n) + d_(i-1,i), y_i(n-1)] + sigma_i(n)
         Parameters
         ----------
-        init : float
-            the time the packet arrives at the output queue.
         number_of_packets : float
             the size of the packet in bytes
         number_of_routers : int
@@ -28,6 +25,7 @@ def Make_Y(init, number_of_packets, number_of_routers, max_window):
         """
     sent = 0
     running_window = 1
+    init = {}
     for j in range(0, number_of_packets + 1):
         for i in range(0, number_of_routers + 1):
             if i == 0:
@@ -55,30 +53,33 @@ def Make_Y(init, number_of_packets, number_of_routers, max_window):
             sent = 0
     return init
 
-# def Make_Y(init, number_of_packets, number_of_routers, max_window):
-#     """ This generates the vectors Y(n) for each packet n consisting of the departure times
-#         of packet n from router i for 0<=i<=k where k is the number of routers.
-#         This implements equations
-#         y_o(n) = Y_K(n - v_n-1) + d_(K,0)
-#         y_i(n) = [max(y_i-1(n) + d_(i-1,i), y_i(n-1)] + sigma_i(n)
-#         Parameters
-#         ----------
-#         init : float
-#             the time the packet arrives at the output queue.
-#         number_of_packets : float
-#             the size of the packet in bytes
-#         number_of_routers : int
-#             an identifier for the packet
-#         max_window: int
-#             identifiers for source and destination
 
-vector = {}
-#
-# test_2_1 = [[0, 2, 4, 6], [9, 11, 13, 15], [9, 11, 13, 15]]
-#
-result = Make_Y(vector, 14, 3, 4)
+def Z_init(packet_number, max_window_size, number_of_routers):
+    """ This generates the data vector for a specified packet number.
+        The Z(n) data vector can be thought of as a number network traces
+        equal to the max window size.
+        Parameters
+        ----------
+        init : float
+            the time the packet arrives at the output queue.
+        number_of_packets : float
+            the size of the packet in bytes
+        number_of_routers : int
+            an identifier for the packet
+        max_window: int
+            identifiers for source and destination
+        """
 
-# for i in range (0,13):
-#     for j in range(0, 13):
-#         vector[j][i] = 1
+
+result = Make_Y(14, 3, 4)
 pprint(result)
+empty = [0] * 4
+Y0 = list(result[0]['departures'].values())
+pprint(Y0)
+Z0 = [Y0]
+print(Z0)
+print(Z0)
+for _ in range(3):
+    Z0.append(empty)
+print(Z0)
+pprint(len(Z0))
