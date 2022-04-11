@@ -73,9 +73,7 @@ def Z_init(packet_number, max_window, number_of_routers):
     z = []
     trace_components = Make_Y(packet_number, number_of_routers, max_window)
     bound = packet_number - max_window
-    print("bound: ", bound)
     for i in range(packet_number, bound, -1):
-        pprint(i)
         if i < 0:
             z.append([0, 0, 0, 0])
         else:
@@ -108,8 +106,36 @@ def M_init(packet_number, number_of_routers):
     return M
 
 
+def MPrime_init(packet_number, number_of_routers):
+    """ This generates Matrix M' for a given packet number and routers in the model
+        M_i,j = Sum (from k = 1 to i of sigma_k(n) + d(k-1,1)) + d(K,0) if j=K
+        and M_i,j = -inf if j<K.
+        In the current implementation all sigma's are = 1 and all delays from router to router are 1
+        Parameters
+        ----------
+        packet_number : int
+            The packet number for which you want the network trace for
+        number_of_routers : int
+            Number of routers in the model.
+        """
+    Mprime = Matrix(dims=(number_of_routers, number_of_routers), fill=0)
+    for i in range(number_of_routers):
+        for j in range(number_of_routers):
+            if j == number_of_routers - 1:
+                for k in range(1, i + 1):
+                    Mprime[i, j] += delay(k-1, k)
+                    Mprime[i, j] += sigma()
+                Mprime[i, j] += delay(number_of_routers -1, 0) # index from zero on routers
+            if j < number_of_routers -1:
+                Mprime[i, j] = float("-inf")
+    return Mprime
+
+
 Z_test = Z_init(0, 4, 3)
 pprint(Z_test)
 
 M_test = M_init(50, 4)
 print(M_test)
+
+Mprime_test = MPrime_init(0, 4)
+print(Mprime_test)
