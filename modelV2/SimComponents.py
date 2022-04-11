@@ -10,6 +10,7 @@ import copy
 from simpy.core import BoundClass
 from simpy.resources import base
 from heapq import heappush, heappop
+import threading
 
 
 class Packet(object):
@@ -201,7 +202,6 @@ class PacketSink(object):
             msg = (yield self.store.get())
             self.busy = 1
             self.byte_size -= msg.size
-            yield self.env.timeout(msg.ltime)  # link time
             msg.arrival[self.id] = int(self.env.now)
             yield self.env.timeout(msg.size / self.rate)  # processing time
             msg.departure[self.id] = int(self.env.now)
@@ -223,6 +223,30 @@ class PacketSink(object):
         return self.store.put(pkt)
 
 
+class Link(object):
+
+    def __init__(self, id, env, rate):
+        self.id = id
+        self.rate = rate
+        self.store = simpy.Store(env)
+        self.env = env
+        self.action = env.process(self.run())
+        self.out = None
+
+    def run(self):
+        while True:
+            with self.store.get() as re:
+                print("Waiting for pck")
+                msg = yield re
+                print("received pckt. Processing...")
+                yield self.env.timeout(msg.size / self.rate)
+                print("Processed pck, sent to switch ...")
+                self.out.put(msg)
+
+
+    def put(self, pkt):
+        self.store.put(pkt)
+
 class SwitchPort(object):
     """ Models a switch output port with a given rate and buffer size limit in bytes.
         Set the "out" member variable to the entity to receive the packet.
@@ -243,7 +267,8 @@ class SwitchPort(object):
 
     def __init__(self, id, env, rate, qlimit=None, limit_bytes=True, debug=False):
         self.id = id
-        self.store = simpy.Store(env)
+        self.input = simpy.Store(env)
+        # self.output = simpy.Store(env)
         self.rate = rate
         self.env = env
         self.out = None
@@ -256,20 +281,32 @@ class SwitchPort(object):
         self.debug = debug
         self.busy = 0  # Used to track if a packet is currently being sent
         self.action = env.process(self.run())  # starts the run() method as a SimPy process
+        self.input_thread = threading.Event()
+        # self.tasks = [([self.input, self.output], [self.process_input(), self.process_output()])]
+
 
     def run(self):
         while True:
-            msg = (yield self.store.get())
-            self.busy = 1
-            self.byte_size -= msg.size
-            yield self.env.timeout(msg.ltime)  # link time
-            msg.arrival[self.id] = int(self.env.now)
-            yield self.env.timeout(msg.size / self.rate)  # processing time
-            msg.departure[self.id] = int(self.env.now)
-            self.out.put(msg)
-            self.busy = 0
-            if self.debug:
-                print(msg)
+
+            with self.input.get() as request:
+                print("ROUTER {} Waiting for output".format(self.id))
+                msg = yield request
+                msg.arrival[self.id] = int(self.env.now)
+                print("ROUTER {} output received packet {} at time {}".format(self.id, msg.id, self.env.now))
+                print("ROUTER {} output processing link time for packet {}...".format(self.id, msg.id))
+                yield self.env.timeout(msg.ltime)  # processing time
+                msg.departure[self.id] = int(self.env.now)
+                self.out.put(msg)
+
+    # def process_output(self):
+    #     with self.output.get() as request:
+    #         print("ROUTER {} Waiting for output".format(self.id))
+    #         msg = yield request
+    #         print("ROUTER {} output received packet {} at time {}".format(self.id, msg.id, self.env.now))
+    #         print("ROUTER {} output processing link time for packet {}...".format(self.id, msg.id))
+    #         yield self.env.timeout(msg.ltime)  # processing time
+    #         msg.departure[self.id] = int(self.env.now)
+    #         self.out.put(msg)
 
     def put(self, pkt):
         self.packets_rec += 1
@@ -282,5 +319,4 @@ class SwitchPort(object):
             self.packets_drop += 1
         else:
             self.byte_size = tmp_byte_count
-            return self.store.put(pkt)
-
+            return self.input.put(pkt)
