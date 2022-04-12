@@ -165,32 +165,42 @@ def A_from_components(packet_number, max_window, number_of_routers, packet_v_n):
             Number of routers in the model.
         """
     product = M_init(packet_number, number_of_routers)  # initialize to M
+    Next_block = 0
     print("M: \n", product)
 
     mprime = MPrime_init(packet_number, number_of_routers)
     print("Mprime: \n", mprime)
 
     print(packet_v_n - 1)
-    block = 0
+    put_m = True
 
     k_epsilon = Matrix(dims=(number_of_routers, number_of_routers), fill=float("-inf"))
     print("KxK Epsilon: \n", k_epsilon)
 
-    if packet_v_n - 1 < 0:
+    block_for_mprime = packet_v_n-2
+    print("Block for Mprime: ", block_for_mprime)
+    if block_for_mprime < 0:
         raise Exception("v_n-1 needs to be greater than -1")
-    if packet_v_n - 1 == 0:
-        product = product.concatenate_h(mprime)
-        block += 1
-    for i in range(0, max_window):
-        if i == block + 1:
+    if block_for_mprime == 0:
+        product = product + mprime
+        print("product after plus \n", product)
+        put_m = False
+    while Next_block != num_routers -1:
+        if put_m and block_for_mprime -1 == Next_block:
             print("product \n:", product)
+            product = product.concatenate_h(mprime)
+            Next_block +=1
+        else:
             product = product.concatenate_h(k_epsilon)
-        print(i)
-    return product
+            Next_block +=1
+    product = product.square_epsilon()
 
+    D = D_init(4,4)
+    final = D + product
+    return final
 
-pckt = 1
-v_n = 1
+pckt = 10
+v_n = 4
 max_window = 4
 num_routers = 4
 

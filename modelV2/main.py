@@ -58,7 +58,7 @@ def main():
     )
     df = pd.DataFrame.from_dict(ps.data)
     df_simulated = df.transpose()
-    pprint(df_simulated.head())
+    pprint(df_simulated.iloc[5:11])
 
     # pck = 1
     # pprint(df_simulated.iloc[pck])

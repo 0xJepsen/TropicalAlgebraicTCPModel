@@ -14,7 +14,7 @@ class Matrix:
 
         for i in range(m):
             mtxStr += (
-                "|" + ", ".join(map(lambda x: "{0:8.3f}".format(x), self.A[i])) + "| \n"
+                "|" + ", ".join(map(lambda x: "{0:7.3f}".format(x), self.A[i])) + "|\n"
             )
 
         mtxStr += "----------------------------------"
@@ -106,3 +106,13 @@ class Matrix:
                     else:
                         c[i, j] = other.A[i][j - self.cols]
             return c
+
+    def square_epsilon(self):
+        c = Matrix(dims=(self.cols, self.cols), fill=float("-inf"))
+        for i in range(c.rows):
+            for j in range(c.cols):
+                # print(i,j)
+                if i < self.rows:
+                    c[i, j] = self.A[i][j]
+        return c
+
