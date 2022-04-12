@@ -14,7 +14,7 @@ class Matrix:
 
         for i in range(m):
             mtxStr += (
-                "|" + ", ".join(map(lambda x: "{0:8.3f}".format(x), self.A[i])) + "| \n"
+                "|" + ", ".join(map(lambda x: "{0:7.3f}".format(x), self.A[i])) + "|\n"
             )
 
         mtxStr += "----------------------------------"
@@ -95,3 +95,24 @@ class Matrix:
             i = key[0]
             j = key[1]
             self.A[i][j] = value
+
+    def concatenate_h(self, other):
+        if isinstance(other, Matrix) and (self.rows == other.rows):
+            c = Matrix(dims=(self.rows, other.cols + self.cols), fill=0.0)
+            for i in range(c.rows):
+                for j in range(c.cols):
+                    if j < self.cols:
+                        c[i, j] = self.A[i][j]
+                    else:
+                        c[i, j] = other.A[i][j - self.cols]
+            return c
+
+    def square_epsilon(self):
+        c = Matrix(dims=(self.cols, self.cols), fill=float("-inf"))
+        for i in range(c.rows):
+            for j in range(c.cols):
+                # print(i,j)
+                if i < self.rows:
+                    c[i, j] = self.A[i][j]
+        return c
+

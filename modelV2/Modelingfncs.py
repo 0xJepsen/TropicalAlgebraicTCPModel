@@ -146,18 +146,75 @@ def D_init(max_window, number_of_routers):
     kw = max_window * number_of_routers
     d = Matrix(dims=(kw, kw), fill=float("-inf"))
     for i in range(kw - number_of_routers):
-        d[number_of_routers+i, i] = 0
+        d[number_of_routers + i, i] = 0
     return d
 
 
-Z_test = Z_init(0, 4, 3)
-pprint(Z_test)
+def A_from_components(packet_number, max_window, number_of_routers, packet_v_n):
+    """ This generates Matrix D given a max window size w* and number of routers in the model K.
+        D is a matrix of dimension Kw* with all its indices equal to -inf except those of the form
+        D_(K+i, i), i = 1,..., K(w* -1) which are all equal to 0
+        In the current implementation all sigma's are = 1 and all delays from router to router are 1
+        Parameters
+        ----------
+        packet_number : int
+            the packet number you want to compute the network trace of
+        max_window : int
+            The maximum window size the model achieves
+        number_of_routers : int
+            Number of routers in the model.
+        """
+    product = M_init(packet_number, number_of_routers)  # initialize to M
+    Next_block = 0
+    print("M: \n", product)
 
-M_test = M_init(50, 4)
-print(M_test)
+    mprime = MPrime_init(packet_number, number_of_routers)
+    print("Mprime: \n", mprime)
 
-Mprime_test = MPrime_init(0, 4)
-print(Mprime_test)
+    print(packet_v_n - 1)
+    put_m = True
 
-D_test = D_init(4, 4)
-print(D_test)
+    k_epsilon = Matrix(dims=(number_of_routers, number_of_routers), fill=float("-inf"))
+    print("KxK Epsilon: \n", k_epsilon)
+
+    block_for_mprime = packet_v_n-2
+    print("Block for Mprime: ", block_for_mprime)
+    if block_for_mprime < 0:
+        raise Exception("v_n-1 needs to be greater than -1")
+    if block_for_mprime == 0:
+        product = product + mprime
+        print("product after plus \n", product)
+        put_m = False
+    while Next_block != num_routers -1:
+        if put_m and block_for_mprime -1 == Next_block:
+            print("product \n:", product)
+            product = product.concatenate_h(mprime)
+            Next_block +=1
+        else:
+            product = product.concatenate_h(k_epsilon)
+            Next_block +=1
+    product = product.square_epsilon()
+
+    D = D_init(4,4)
+    final = D + product
+    return final
+
+pckt = 10
+v_n = 4
+max_window = 4
+num_routers = 4
+
+AVBADY = A_from_components(pckt, max_window, num_routers, v_n)
+print(AVBADY)
+
+# Z_test = Z_init(0, 4, 3)
+# pprint(Z_test)
+#
+# M_test = M_init(50, 4)
+# print(M_test)
+#
+# Mprime_test = MPrime_init(0, 4)
+# print(Mprime_test)
+#
+# D_test = D_init(4, 4)
+# print(D_test)

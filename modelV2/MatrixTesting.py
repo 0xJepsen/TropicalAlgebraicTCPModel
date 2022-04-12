@@ -1,7 +1,7 @@
 
 from MatrixMath import Matrix
 
-A = Matrix(dims=(3,3), fill=1.0)
+A = Matrix(dims=(1,3), fill=1.0)
 B = Matrix(dims=(3,3), fill=2.0)
 
 
@@ -48,7 +48,21 @@ print(A[0,0])
 
 
 # Test 09
-print('Element update (Matrix-scalar):')
-print(A)
-A[0,0] = -10.0
-print(A)
+# print('Element update (Matrix-scalar):')
+# print(A)
+# A[0,0] = -10.0
+# print(A)
+
+# Test 10
+# print("Horizontal concatenation")
+# print("A: \n", A)
+# print("B: \n", B)
+#
+# C = A.concatenate_h(B)
+# print("A|B: \n", C)
+# print("C[0,0] \n", C[0,0])
+A = Matrix(dims=(1,3), fill=1.0)
+
+print("A before \n", A)
+C = A.square_epsilon()
+print("A.square_epsilon: \n", C)
