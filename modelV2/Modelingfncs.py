@@ -70,15 +70,23 @@ def Z_init(packet_number, max_window, number_of_routers):
         number_of_routers : int
             Number of routers in the model.
         """
+
+    new = Matrix(dims=(1, (1 + number_of_routers) * max_window), fill=0)
     z = []
+    print(new)
     trace_components = Make_Y(packet_number, number_of_routers, max_window)
     bound = packet_number - max_window
-    for i in range(packet_number, bound, -1):
-        if i < 0:
+    count = 0
+    for pkt in range(packet_number, bound, -1):
+        if pkt < 0:
             z.append([0, 0, 0, 0])
         else:
-            z.append(list(trace_components[i]['departures'].values()))
-    return z
+            if count < 16:
+                for dep in (list(trace_components[pkt]['departures'].values())):
+                    z.append(dep)
+                    new[0, count] = dep
+                    count +=1
+    return new
 
 
 def M_init(packet_number, number_of_routers):
@@ -177,7 +185,7 @@ def A_from_components(packet_number, max_window, number_of_routers, packet_v_n):
     k_epsilon = Matrix(dims=(number_of_routers, number_of_routers), fill=float("-inf"))
     print("KxK Epsilon: \n", k_epsilon)
 
-    block_for_mprime = packet_v_n-2
+    block_for_mprime = packet_v_n - 2
     print("Block for Mprime: ", block_for_mprime)
     if block_for_mprime < 0:
         raise Exception("v_n-1 needs to be greater than -1")
@@ -185,31 +193,34 @@ def A_from_components(packet_number, max_window, number_of_routers, packet_v_n):
         product = product + mprime
         print("product after plus \n", product)
         put_m = False
-    while Next_block != num_routers -1:
-        if put_m and block_for_mprime -1 == Next_block:
+    while Next_block != num_routers - 1:
+        if put_m and block_for_mprime - 1 == Next_block:
             print("product \n:", product)
             product = product.concatenate_h(mprime)
-            Next_block +=1
+            Next_block += 1
         else:
             product = product.concatenate_h(k_epsilon)
-            Next_block +=1
+            Next_block += 1
     product = product.square_epsilon()
 
-    D = D_init(4,4)
+    D = D_init(4, 4)
     final = D + product
     return final
 
-pckt = 10
+
+pkt = 10
 v_n = 4
 max_window = 4
 num_routers = 4
 
-AVBADY = A_from_components(pckt, max_window, num_routers, v_n)
+AVBADY = A_from_components(pkt, max_window, num_routers, v_n)
 print(AVBADY)
 
-# Z_test = Z_init(0, 4, 3)
-# pprint(Z_test)
-#
+Z_test = Z_init(pkt, max_window, 3)
+print(Z_test)
+
+# y = Make_Y(pkt,3 , max_window)
+# pprint(y)
 # M_test = M_init(50, 4)
 # print(M_test)
 #
