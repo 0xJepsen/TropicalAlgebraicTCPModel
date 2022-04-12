@@ -95,3 +95,12 @@ class Matrix:
             i = key[0]
             j = key[1]
             self.A[i][j] = value
+
+    def concatenate_h(self, other):
+        if isinstance(other, Matrix) and (self.rows == other.rows):
+            c = Matrix(dims=(self.rows, other.cols + self.cols), fill=0.0)
+            for i in range(self.rows):
+                for j in range(self.cols):
+                    c[i, j] = self[i, j]
+                    c[i, j+other.cols] = other[i, j]
+            return c

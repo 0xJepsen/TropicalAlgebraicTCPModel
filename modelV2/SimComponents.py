@@ -101,53 +101,53 @@ class PacketGenerator(object):
         while self.env.now < self.finish:
             if self.init:
                 p = self.gen_packets()
-                print("V_n for packet 0: ", self.window)
+                # print("V_n for packet 0: ", self.window)
                 p.v_n = self.window
                 self.init = False
                 # first ack
                 msg = yield self.store.get()
                 self.last_received = msg.id
                 self.seen_ack.append(msg.id)
-                print("Recieved message: ", msg.id)
-                print(self.env.now)
+                # print("Recieved message: ", msg.id)
+                # print(self.env.now)
                 yield self.env.timeout(3)
-                print(self.env.now)
+                # print(self.env.now)
 
                 self.acks += 1
             while self.sent_per_window <= self.window:
                 if (self.last_sent + 1 - p.v_n) in self.seen_ack:
                     p = self.gen_packets()
                     p.v_n = self.window
-                    print("packet V_n: ", p.v_n)
-                    print("Sent per window: ", self.sent_per_window)
+                    # print("packet V_n: ", p.v_n)
+                    # print("Sent per window: ", self.sent_per_window)
                 else:
-                    print("Time before receiveing: ", self.env.now)
+                    # print("Time before receiveing: ", self.env.now)
                     msg = yield self.store.get()
                     self.last_received = msg.id
-                    print("message departure time: ", msg.departure[3])
-                    print("Time before delay yield: ", self.env.now)
+                    # print("message departure time: ", msg.departure[3])
+                    # print("Time before delay yield: ", self.env.now)
                     while self.env.now != msg.departure[3] + 3:
                         yield self.env.timeout(1)
                     self.seen_ack.append(msg.id)
                     self.acks += 1
-                    print("Recieved msg id: ", self.last_received)
-                    print("Current Time: ", self.env.now)
+                    # print("Recieved msg id: ", self.last_received)
+                    # print("Current Time: ", self.env.now)
                 if self.window == self.max_window and self.sent_per_window > 0:
                     self.window = 1
                     self.sent_per_window = 0
                 if self.sent_per_window == self.window + 1:
-                    print("increasing next window size")
+                    # print("increasing next window size")
                     self.window += 1
                     self.next_window += 1
                     self.sent_per_window = 0
 
-                print("end")
+                # print("end")
 
     def gen_packets(self):
         p = Packet(self.env.now, self.size, self.packets_sent, src=self.id, flow_id=self.flow_id)
         p.ltime = p.size / self.link_rate
         p.departure[0] = int(self.env.now)
-        print(p)
+        # print(p)
         self.packets_sent += 1
         self.sent_per_window += 1
         self.last_sent = p.id
@@ -236,16 +236,16 @@ class Link(object):
     def run(self):
         while True:
             with self.store.get() as re:
-                print("Waiting for pck")
+                # print("Waiting for pck")
                 msg = yield re
-                print("received pckt. Processing...")
+                # print("received pckt. Processing...")
                 yield self.env.timeout(msg.size / self.rate)
-                print("Processed pck, sent to switch ...")
+                # print("Processed pck, sent to switch ...")
                 self.out.put(msg)
-
 
     def put(self, pkt):
         self.store.put(pkt)
+
 
 class SwitchPort(object):
     """ Models a switch output port with a given rate and buffer size limit in bytes.
@@ -284,29 +284,17 @@ class SwitchPort(object):
         self.input_thread = threading.Event()
         # self.tasks = [([self.input, self.output], [self.process_input(), self.process_output()])]
 
-
     def run(self):
         while True:
-
             with self.input.get() as request:
-                print("ROUTER {} Waiting for output".format(self.id))
+                # print("ROUTER {} Waiting for output".format(self.id))
                 msg = yield request
                 msg.arrival[self.id] = int(self.env.now)
-                print("ROUTER {} output received packet {} at time {}".format(self.id, msg.id, self.env.now))
-                print("ROUTER {} output processing link time for packet {}...".format(self.id, msg.id))
+                # print("ROUTER {} output received packet {} at time {}".format(self.id, msg.id, self.env.now))
+                # print("ROUTER {} output processing link time for packet {}...".format(self.id, msg.id))
                 yield self.env.timeout(msg.ltime)  # processing time
                 msg.departure[self.id] = int(self.env.now)
                 self.out.put(msg)
-
-    # def process_output(self):
-    #     with self.output.get() as request:
-    #         print("ROUTER {} Waiting for output".format(self.id))
-    #         msg = yield request
-    #         print("ROUTER {} output received packet {} at time {}".format(self.id, msg.id, self.env.now))
-    #         print("ROUTER {} output processing link time for packet {}...".format(self.id, msg.id))
-    #         yield self.env.timeout(msg.ltime)  # processing time
-    #         msg.departure[self.id] = int(self.env.now)
-    #         self.out.put(msg)
 
     def put(self, pkt):
         self.packets_rec += 1

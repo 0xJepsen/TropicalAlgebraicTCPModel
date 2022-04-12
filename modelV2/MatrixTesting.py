@@ -52,3 +52,11 @@ print('Element update (Matrix-scalar):')
 print(A)
 A[0,0] = -10.0
 print(A)
+
+# Test 10
+print("Horizontal concatenation")
+print("A: \n", A)
+print("B: \n", B)
+
+C = A.concatenate_h(B)
+print("A|B: \n", C)

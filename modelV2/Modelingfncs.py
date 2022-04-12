@@ -146,18 +146,54 @@ def D_init(max_window, number_of_routers):
     kw = max_window * number_of_routers
     d = Matrix(dims=(kw, kw), fill=float("-inf"))
     for i in range(kw - number_of_routers):
-        d[number_of_routers+i, i] = 0
+        d[number_of_routers + i, i] = 0
     return d
 
 
-Z_test = Z_init(0, 4, 3)
-pprint(Z_test)
+def A_from_components(packet_number, max_window, number_of_routers, packet_v_n):
+    """ This generates Matrix D given a max window size w* and number of routers in the model K.
+        D is a matrix of dimension Kw* with all its indices equal to -inf except those of the form
+        D_(K+i, i), i = 1,..., K(w* -1) which are all equal to 0
+        In the current implementation all sigma's are = 1 and all delays from router to router are 1
+        Parameters
+        ----------
+        packet_number : int
+            the packet number you want to compute the network trace of
+        max_window : int
+            The maximum window size the model achieves
+        number_of_routers : int
+            Number of routers in the model.
+        """
+    print("Started")
+    big_num = 100
+    m1 = M_init(packet_number, number_of_routers)
+    mprimt = MPrime_init(packet_number, number_of_routers)
+    print(packet_v_n - 1)
+    if packet_v_n - 1 < 0:
+        raise Exception("v_n-1 needs to be greater than -1")
+    for i in range(0, max_window):
+        if i == packet_v_n - 1:
 
-M_test = M_init(50, 4)
-print(M_test)
+        print(i)
+    return big_num
 
-Mprime_test = MPrime_init(0, 4)
-print(Mprime_test)
 
-D_test = D_init(4, 4)
-print(D_test)
+pckt = 1
+v_n = 1
+max_window = 4
+num_routers = 4
+
+AVBADY = A_from_components(pckt, max_window, num_routers, v_n)
+
+
+# Z_test = Z_init(0, 4, 3)
+# pprint(Z_test)
+#
+# M_test = M_init(50, 4)
+# print(M_test)
+#
+# Mprime_test = MPrime_init(0, 4)
+# print(Mprime_test)
+#
+# D_test = D_init(4, 4)
+# print(D_test)
