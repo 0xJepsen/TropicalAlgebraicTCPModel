@@ -24,6 +24,7 @@ def Make_Y(number_of_packets, number_of_routers, max_window):
         max_window: int
             The maximum window size in the model
         """
+    number_of_routers = number_of_routers - 1
     sent = 0
     running_window = 1
     init = {}
@@ -56,7 +57,7 @@ def Make_Y(number_of_packets, number_of_routers, max_window):
     return init
 
 
-def Z_init(packet_number, max_window, number_of_routers):
+def Z_init(packet_number, number_of_routers, max_window):
     """ This generates the data vector for a specified packet number.
         The Z(n) data vector can be thought of as a number network traces
         equal to the max window size.
@@ -71,9 +72,8 @@ def Z_init(packet_number, max_window, number_of_routers):
             Number of routers in the model.
         """
 
-    new = Matrix(dims=(1, (1 + number_of_routers) * max_window), fill=0)
+    new = Matrix(dims=(number_of_routers * max_window, 1), fill=0)
     z = []
-    print(new)
     trace_components = Make_Y(packet_number, number_of_routers, max_window)
     bound = packet_number - max_window
     count = 0
@@ -84,7 +84,7 @@ def Z_init(packet_number, max_window, number_of_routers):
             if count < 16:
                 for dep in (list(trace_components[pkt]['departures'].values())):
                     z.append(dep)
-                    new[0, count] = dep
+                    new[count, 0] = dep
                     count +=1
     return new
 
@@ -139,7 +139,7 @@ def MPrime_init(packet_number, number_of_routers):
     return Mprime
 
 
-def D_init(max_window, number_of_routers):
+def D_init(number_of_routers, max_window):
     """ This generates Matrix D given a max window size w* and number of routers in the model K.
         D is a matrix of dimension Kw* with all its indices equal to -inf except those of the form
         D_(K+i, i), i = 1,..., K(w* -1) which are all equal to 0
@@ -158,7 +158,7 @@ def D_init(max_window, number_of_routers):
     return d
 
 
-def A_from_components(packet_number, max_window, number_of_routers, packet_v_n):
+def A_from_components(packet_number, number_of_routers, max_window, packet_v_n):
     """ This generates Matrix D given a max window size w* and number of routers in the model K.
         D is a matrix of dimension Kw* with all its indices equal to -inf except those of the form
         D_(K+i, i), i = 1,..., K(w* -1) which are all equal to 0
@@ -208,16 +208,22 @@ def A_from_components(packet_number, max_window, number_of_routers, packet_v_n):
     return final
 
 
-pkt = 10
+def Z_step(avn1, zn1):
+    return avn1 @ zn1
+
+pkt = 4
 v_n = 4
-max_window = 4
+m_window = 4
 num_routers = 4
 
-AVBADY = A_from_components(pkt, max_window, num_routers, v_n)
+AVBADY = A_from_components(pkt, num_routers, m_window, v_n)
 print(AVBADY)
 
-Z_test = Z_init(pkt, max_window, 3)
+Z_test = Z_init(pkt, num_routers, m_window)
 print(Z_test)
+
+Z_next = AVBADY @ Z_test
+print(Z_next)
 
 # y = Make_Y(pkt,3 , max_window)
 # pprint(y)
