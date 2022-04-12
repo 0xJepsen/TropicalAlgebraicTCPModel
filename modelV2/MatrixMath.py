@@ -99,8 +99,10 @@ class Matrix:
     def concatenate_h(self, other):
         if isinstance(other, Matrix) and (self.rows == other.rows):
             c = Matrix(dims=(self.rows, other.cols + self.cols), fill=0.0)
-            for i in range(self.rows):
-                for j in range(self.cols):
-                    c[i, j] = self[i, j]
-                    c[i, j+other.cols] = other[i, j]
+            for i in range(c.rows):
+                for j in range(c.cols):
+                    if j < self.cols:
+                        c[i, j] = self.A[i][j]
+                    else:
+                        c[i, j] = other.A[i][j - self.cols]
             return c

@@ -2,7 +2,7 @@
 from MatrixMath import Matrix
 
 A = Matrix(dims=(3,3), fill=1.0)
-B = Matrix(dims=(3,3), fill=2.0)
+B = Matrix(dims=(3,4), fill=2.0)
 
 
 # Test 01
@@ -48,10 +48,10 @@ print(A[0,0])
 
 
 # Test 09
-print('Element update (Matrix-scalar):')
-print(A)
-A[0,0] = -10.0
-print(A)
+# print('Element update (Matrix-scalar):')
+# print(A)
+# A[0,0] = -10.0
+# print(A)
 
 # Test 10
 print("Horizontal concatenation")
@@ -60,3 +60,4 @@ print("B: \n", B)
 
 C = A.concatenate_h(B)
 print("A|B: \n", C)
+print("C[0,0] \n", C[0,0])

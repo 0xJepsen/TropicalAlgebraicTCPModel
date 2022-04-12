@@ -164,18 +164,29 @@ def A_from_components(packet_number, max_window, number_of_routers, packet_v_n):
         number_of_routers : int
             Number of routers in the model.
         """
-    print("Started")
-    big_num = 100
-    m1 = M_init(packet_number, number_of_routers)
-    mprimt = MPrime_init(packet_number, number_of_routers)
+    product = M_init(packet_number, number_of_routers)  # initialize to M
+    print("M: \n", product)
+
+    mprime = MPrime_init(packet_number, number_of_routers)
+    print("Mprime: \n", mprime)
+
     print(packet_v_n - 1)
+    block = 0
+
+    k_epsilon = Matrix(dims=(number_of_routers, number_of_routers), fill=float("-inf"))
+    print("KxK Epsilon: \n", k_epsilon)
+
     if packet_v_n - 1 < 0:
         raise Exception("v_n-1 needs to be greater than -1")
+    if packet_v_n - 1 == 0:
+        product = product.concatenate_h(mprime)
+        block += 1
     for i in range(0, max_window):
-        if i == packet_v_n - 1:
-
+        if i == block + 1:
+            print("product \n:", product)
+            product = product.concatenate_h(k_epsilon)
         print(i)
-    return big_num
+    return product
 
 
 pckt = 1
@@ -184,7 +195,7 @@ max_window = 4
 num_routers = 4
 
 AVBADY = A_from_components(pckt, max_window, num_routers, v_n)
-
+print(AVBADY)
 
 # Z_test = Z_init(0, 4, 3)
 # pprint(Z_test)
