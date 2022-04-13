@@ -17,7 +17,7 @@ distSize = 10
 SWITCH_BANDWIDTH = 10
 LINK_BANDWIDTH = 10
 SWITCH_QSIZE = 50
-SIM_TIME = 30
+SIM_TIME = 75
 
 WINDOW_SIZE = 4
 NUMBER_OF_SWITCHES = 4
@@ -79,6 +79,7 @@ def validate_Y():
                 df_generated.values[i][0][j] - df_simulated_departures.values[i][0][j])
 
     df_errors = pd.DataFrame.from_dict(errors, orient='index')
+    pprint(df_errors)
     df_errors["sum"] = df_errors.sum(axis=1)
 
     print("---------- Error In Departure Times ----------")
@@ -92,49 +93,59 @@ def validate_Z(conf):
     df_simulated, ps = simulate()
     print("---------- Simulated Departure Data ----------")
     simulated_departures = df_simulated.loc[:, ["departures", "V_n"]]
-    pprint(simulated_departures)
-
-
     # generated_departures = Make_Y(ps.packets_rec - 1, 4, 4)
     # df_generated = pd.DataFrame.from_dict(generated_departures, orient='index')
     # print("---------- Generated Departure Data ----------")
     current_packet = 0
-
-    # while current_packet < ps.packets_rec -1:
-    #     current_z = Z_gen(current_packet, NUMBER_OF_SWITCHES, WINDOW_SIZE)
-
     errors_by_z = {}
-    print(simulated_departures.head())
+    # print(simulated_departures.head())
+    # print(simulated_departures["departures"][0])
 
     zeee = Z_continuous(current_packet, ps.packets_rec-1, conf)
     for m in zeee.keys():
-        print("N=", m)
         z = zeee[m].transpose()
-        print(z)
-        print(z.cols)
+        current_index_packet = m
+        errors = {current_index_packet: {}}
+        breakpoint = 0
+        total_pkts = 0
+        for j in range(0, z.cols):
+            if current_index_packet < 0:
+                errors[current_index_packet]['Router {}'.format(j % conf.number_of_routers)] = 0
+                errors[current_index_packet]['packet'] = current_index_packet
+            else:
+                print(z[0,j])
+                print("current index packet", current_index_packet)
+                print(simulated_departures["departures"][current_index_packet][j % conf.number_of_routers])
+                errors[current_index_packet]['Router {}'.format(j % conf.number_of_routers)] = \
+                    abs((z[0, j]) - simulated_departures["departures"][current_index_packet][j % conf.number_of_routers])
+                breakpoint += 1
+                errors[current_index_packet]['packet'] = current_index_packet
+            if j % conf.number_of_routers == conf.number_of_routers - 1:
+                current_index_packet -= 1
+                total_pkts += 1
+                print("Total Packets", total_pkts)
+                if total_pkts < conf.number_of_routers:
+                    errors[current_index_packet] = {}
 
-    #     current_packet += 1
-    #     errors = {current_packet: {}}
-    #     current_index_packet = current_packet
-    #     breakpoint = 0
-    #     total_pkts = 0
-    #     for j in range(0, z.cols):
-    #         if current_index_packet < 0:
-    #             errors[current_index_packet]['Router {}'.format(j % number_of_routers)] = 0
-    #         else:
-    #             errors[current_index_packet]['Router {}'.format(j % number_of_routers)] = \
-    #                 abs((current_z[j, 0]) - simulated_departures["departures"][current_index_packet][j % number_of_routers])
-    #             breakpoint += 1
-    #         if j%number_of_routers == number_of_routers - 1 and breakpoint >= number_of_routers -1:
-    #             current_index_packet -=1
-    #             total_pkts +=1
-    #             if total_pkts < number_of_routers:
-    #                 errors[current_index_packet] = {}
-    #
-    #         errors_by_z[current_packet] = errors
+            errors_by_z[m] = errors
+    df = pd.DataFrame()
+    idx = 0
+    for key in errors_by_z.keys():
+        df_errors = pd.DataFrame.from_dict(errors_by_z[key], orient='index')
+        df_errors["sum"] = df_errors[["Router 0", "Router 1", "Router 2", "Router 3"]].sum(axis=1)
+        # pprint(df_errors.head())
+        df = pd.concat([df, df_errors]).drop_duplicates(subset=['packet'])
 
-    # pprint(errors)
-
+    # df.sort()
+    pprint(df.head())
+    print("---------- Error In Departure Times ----------")
+    print(df.iloc[0:10])
+    new = df.drop(columns=["packet"], axis=1)
+    pprint(new.head())
+    ax = new.plot()
+    ax.set_ylabel('Quantity of Error')
+    ax.set_xlabel('Packet Number')
+    plt.show()
 
 
 def main():
