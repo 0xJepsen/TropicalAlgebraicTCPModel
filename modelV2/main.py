@@ -1,27 +1,23 @@
 from random import expovariate
 import simpy
 from SimComponents import PacketGenerator, PacketSink, SwitchPort, Link
-from Modelingfncs import Make_Y, delay, A_from_components, Z_gen, Z_init
+from Modelingfncs import Make_Y, delay, A_from_components, Z_continuous, Z_init
 import pandas as pd
 from pprint import pprint
 import matplotlib.pyplot as plt
-
-
-def constArrival():  # Constant arrival distribution for generator 1
-    return 1.5
-
-
-def constArrival2():
-    return 2.0
+from Simulation import SimulationConfig
 
 
 # def distSize():
 #     return expovariate(0.01)
+config = SimulationConfig("sim1", 4, 4)
+config.make_Vn()
+
 distSize = 10
 SWITCH_BANDWIDTH = 10
 LINK_BANDWIDTH = 10
 SWITCH_QSIZE = 50
-SIM_TIME = 50
+SIM_TIME = 30
 
 WINDOW_SIZE = 4
 NUMBER_OF_SWITCHES = 4
@@ -32,7 +28,7 @@ NUMBER_OF_SWITCHES = 4
 def simulate():
     env = simpy.Environment()  # Create the SimPy environment
     pg = PacketGenerator(
-        env, "Generator", constArrival, distSize, LINK_BANDWIDTH
+        env, "Generator", distSize, LINK_BANDWIDTH
     )
     s1 = SwitchPort(1, env, rate=SWITCH_BANDWIDTH, qlimit=SWITCH_QSIZE)
     s2 = SwitchPort(2, env, rate=SWITCH_BANDWIDTH, qlimit=SWITCH_QSIZE)
@@ -71,7 +67,7 @@ def validate_Y():
     print("---------- Simulated Departure Data ----------")
     pprint(df_simulated_departures.head())
 
-    generated_departures = Make_Y(ps.packets_rec - 1, 4, 4)
+    generated_departures = Make_Y(ps.packets_rec - 1, config)
     df_generated = pd.DataFrame.from_dict(generated_departures, orient='index')
     print("---------- Generated Departure Data ----------")
     pprint(df_generated.head())
@@ -89,10 +85,10 @@ def validate_Y():
     ax = df_errors.plot()
     ax.set_ylabel('Quantity of Error')
     ax.set_xlabel('Packet Number')
-    plt.show()
+    # plt.show()
 
 
-def validate_Z(number_of_routers, window_size):
+def validate_Z(conf):
     df_simulated, ps = simulate()
     print("---------- Simulated Departure Data ----------")
     simulated_departures = df_simulated.loc[:, ["departures", "V_n"]]
@@ -110,35 +106,40 @@ def validate_Z(number_of_routers, window_size):
     errors_by_z = {}
     print(simulated_departures.head())
 
-    while current_packet < ps.packets_rec-1:
-        current_z = Z_gen(current_packet, number_of_routers, window_size)
-        current_packet += 1
-        errors = {current_packet: {}}
-        current_index_packet = current_packet
-        breakpoint = 0
-        total_pkts = 0
-        for j in range(0, window_size * number_of_routers):
-            if current_index_packet < 0:
-                errors[current_index_packet]['Router {}'.format(j % number_of_routers)] = 0
-            else:
-                errors[current_index_packet]['Router {}'.format(j % number_of_routers)] = \
-                    abs((current_z[j, 0]) - simulated_departures["departures"][current_index_packet][j % number_of_routers])
-                breakpoint += 1
-            if j%number_of_routers == number_of_routers - 1 and breakpoint >= number_of_routers -1:
-                current_index_packet -=1
-                total_pkts +=1
-                if total_pkts < number_of_routers:
-                    errors[current_index_packet] = {}
+    zeee = Z_continuous(current_packet, ps.packets_rec-1, conf)
+    for m in zeee.keys():
+        print("N=", m)
+        z = zeee[m].transpose()
+        print(z)
+        print(z.cols)
 
-        errors_by_z[current_packet] = errors
+    #     current_packet += 1
+    #     errors = {current_packet: {}}
+    #     current_index_packet = current_packet
+    #     breakpoint = 0
+    #     total_pkts = 0
+    #     for j in range(0, z.cols):
+    #         if current_index_packet < 0:
+    #             errors[current_index_packet]['Router {}'.format(j % number_of_routers)] = 0
+    #         else:
+    #             errors[current_index_packet]['Router {}'.format(j % number_of_routers)] = \
+    #                 abs((current_z[j, 0]) - simulated_departures["departures"][current_index_packet][j % number_of_routers])
+    #             breakpoint += 1
+    #         if j%number_of_routers == number_of_routers - 1 and breakpoint >= number_of_routers -1:
+    #             current_index_packet -=1
+    #             total_pkts +=1
+    #             if total_pkts < number_of_routers:
+    #                 errors[current_index_packet] = {}
+    #
+    #         errors_by_z[current_packet] = errors
 
-    pprint(errors)
+    # pprint(errors)
 
 
 
 def main():
-    validate_Y()
-    # validate_Z(NUMBER_OF_SWITCHES, WINDOW_SIZE)
+    # validate_Y()
+    validate_Z(config)
 
 
 if __name__ == '__main__':

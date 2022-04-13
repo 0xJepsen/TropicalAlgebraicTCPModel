@@ -3,12 +3,7 @@ from MatrixMath import Matrix
 from Simulation import SimulationConfig
 
 config = SimulationConfig("test", 4, 4)
-
-print(config.id)
-print(config.max_window)
 config.make_Vn()
-print(config.vn)
-print(config.number_of_routers)
 
 
 def delay(src, dst):
@@ -221,11 +216,11 @@ def A_from_components(packet_number, configuration):
     return final
 
 
-def Z_gen(packet_number, configuration):
-    z_initial = Z_init(packet_number, configuration)
-    a_n = A_from_components(packet_number, configuration)
-    z_next = a_n @ z_initial
-    return z_next
+# def Z_gen(packet_number, configuration):
+#     z_initial = Z_init(packet_number, configuration)
+#     a_n = A_from_components(packet_number, configuration)
+#     z_next = a_n @ z_initial
+#     return z_next
 
 
 def Z_continuous(starting_packet_number, ending_packet_number, configuration):
@@ -245,10 +240,11 @@ def Z_continuous(starting_packet_number, ending_packet_number, configuration):
 # AVBADY = A_from_components(0, config)
 # print(AVBADY)
 
-ze = Z_continuous(0, 5, config)
-for m in ze.values():
-    z = m.transpose()
-    print(z)
+# ze = Z_continuous(0, 10, config)
+# for m in ze.keys():
+#     print("N=", m)
+#     z = ze[m].transpose()
+#     print(z)
 
 # Z_test = Z_gen(pkt, config)
 # result = Z_test.transpose()
