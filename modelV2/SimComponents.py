@@ -1,8 +1,7 @@
 """
-    A bit more detailed set of components to use in packet switching
-    queueing experiments.
-    Copyright 2014 Greg M. Bernstein
-    Released under the MIT license
+    A restructure of simulation components from Greg M. Bernstein
+    Most is all original work from Waylon Jepsen, as the initial sim compents
+    didn't fit my needs.
 """
 import simpy
 import random
@@ -90,7 +89,6 @@ class PacketGenerator(object):
         self.last_received = None
         self.max_window = 4
         self.sent_per_window = 0
-        self.next_window = 1
         self.seen_ack = []
 
     def run(self):
@@ -118,27 +116,18 @@ class PacketGenerator(object):
                 if (self.last_sent + 1 - p.v_n) in self.seen_ack:
                     p = self.gen_packets()
                     p.v_n = self.window
-                    # print("packet V_n: ", p.v_n)
-                    # print("Sent per window: ", self.sent_per_window)
                 else:
-                    # print("Time before receiveing: ", self.env.now)
                     msg = yield self.store.get()
                     self.last_received = msg.id
-                    # print("message departure time: ", msg.departure[3])
-                    # print("Time before delay yield: ", self.env.now)
                     while self.env.now != msg.departure[3] + 3:
                         yield self.env.timeout(1)
                     self.seen_ack.append(msg.id)
                     self.acks += 1
-                    # print("Recieved msg id: ", self.last_received)
-                    # print("Current Time: ", self.env.now)
                 if self.window == self.max_window and self.sent_per_window > 0:
                     self.window = 1
                     self.sent_per_window = 0
                 if self.sent_per_window == self.window + 1:
-                    # print("increasing next window size")
                     self.window += 1
-                    self.next_window += 1
                     self.sent_per_window = 0
 
                 # print("end")
