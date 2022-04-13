@@ -229,6 +229,13 @@ def Z_gen(packet_number, number_of_routers, max_window):
     z_next = a_n @ z_initial
     return z_next
 
+def Z_continuous(starting_packet_number, ending_packet_number, number_of_routers, max_window, vn_seq):
+    z_initial, vn = Z_init(starting_pakcet_number, number_of_routers, max_window)
+
+    a_n = A_from_components(packet_number, number_of_routers, max_window, current_v_n)
+    current_packet = starting_packet_number
+    while current_packet < ending_packet_number:
+
 
 pkt = 9
 
