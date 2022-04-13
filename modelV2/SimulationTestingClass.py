@@ -1,4 +1,4 @@
-from Simulation import Simulation
+from Simulation import SimulationConfig
 
 sim = Simulation("test", 4, 4)
 

@@ -1,5 +1,14 @@
 from pprint import pprint
 from MatrixMath import Matrix
+from Simulation import SimulationConfig
+
+config = SimulationConfig("test", 4, 4)
+
+print(config.id)
+print(config.max_window)
+config.make_Vn()
+print(config.vn)
+print(config.number_of_routers)
 
 
 def delay(src, dst):
@@ -10,7 +19,7 @@ def sigma():
     return 1
 
 
-def Make_Y(number_of_packets, number_of_routers, max_window):
+def Make_Y(number_of_packets, configuration):
     """ This generates the vectors Y(n) for each packet n consisting of the departure times
         of packet n from router i for 0<=i<=k where k is the number of routers.
         y_o(n) = Y_K(n - v_n-1) + d_(K,0)
@@ -19,19 +28,16 @@ def Make_Y(number_of_packets, number_of_routers, max_window):
         ----------
         number_of_packets : int
             The number of packets you want to generate data for
-        number_of_routers : int
-            The number of routers in the model
-        max_window: int
-            The maximum window size in the model
+        configuration
+            has the simulation configuration information
         """
-    # number_of_routers = number_of_routers - 1
     sent = 0
     running_window = 1
     init = {}
     for j in range(0, number_of_packets + 1):
         # loop through packets
         print("Packet: ", j)
-        for i in range(0, number_of_routers):
+        for i in range(0, configuration.number_of_routers):
             # loop through routers
             if i == 0:
                 # first router
@@ -43,11 +49,8 @@ def Make_Y(number_of_packets, number_of_routers, max_window):
                 else:
                     """y_o(n) = Y_K(n - v_n-1) + d_(K,0)"""
                     init[j] = {'departures': {
-                        0: init[j - init[j-1]['V_n']]['departures'][number_of_routers - 1] + delay(number_of_routers - 1,
-                                                                                                 0)}}
-                    # print("V_N -1 =", init[j-1]['V_n'])
-                    # print("Running Window", running_window)
-                    # # init[j - init[j-1]['V_n']]
+                        0: init[j - init[j - 1]['V_n']]['departures'][configuration.number_of_routers - 1] +
+                           delay(configuration.number_of_routers - 1, 0)}}
                     sent += 1
                     init[j]['V_n'] = running_window
             else:
@@ -58,7 +61,7 @@ def Make_Y(number_of_packets, number_of_routers, max_window):
                     the_max = max(init[j]['departures'][i - 1] + delay(i - 1, i), init[j - 1]['departures'][i])
                     """y_i(n) = [max(y_i-1(n) + d_(i-1,i), y_i(n-1)]"""
                 init[j]['departures'][i] = the_max + sigma()
-        if running_window == max_window and sent >0:
+        if running_window == configuration.max_window and sent > 0:
             running_window = 1
             sent = 0
         if sent == running_window + 1:
@@ -67,7 +70,7 @@ def Make_Y(number_of_packets, number_of_routers, max_window):
     return init
 
 
-def Z_init(packet_number, number_of_routers, max_window):
+def Z_init(packet_number, configuration):
     """ This generates the data vector for a specified packet number.
         The Z(n) data vector can be thought of as a number network traces
         equal to the max window size.
@@ -82,28 +85,24 @@ def Z_init(packet_number, number_of_routers, max_window):
             Number of routers in the model.
         """
 
-    new = Matrix(dims=(number_of_routers * max_window, 1), fill=0)
-    trace_components = Make_Y(packet_number, number_of_routers, max_window)
-    bound = packet_number - max_window
+    new = Matrix(dims=(configuration.number_of_routers * configuration.max_window, 1), fill=0)
+    trace_components = Make_Y(packet_number, configuration)
+    bound = packet_number - configuration.max_window
     count = 0
-    # print("Dims", number_of_routers*max_window)
     flag = True
-    current_v_n = "test"
     for packet in range(packet_number, bound, -1):
         if flag:
-            current_v_n = trace_components[packet]['V_n']
             flag = False
-        if count < (number_of_routers * max_window):
-            # print("count", count)
+        if count < (configuration.number_of_routers * configuration.max_window):
             if packet < 0:
-                for _ in range(0, number_of_routers):
+                for _ in range(0, configuration.number_of_routers):
                     new[count, 0] = 0
                     count += 1
             else:
                 for dep in (list(trace_components[packet]['departures'].values())):
                     new[count, 0] = dep
                     count += 1
-    return new, current_v_n
+    return new
 
 
 def M_init(packet_number, number_of_routers):
@@ -156,7 +155,7 @@ def MPrime_init(packet_number, number_of_routers):
     return Mprime
 
 
-def D_init(number_of_routers, max_window):
+def D_init(configuration):
     """ This generates Matrix D given a max window size w* and number of routers in the model K.
         D is a matrix of dimension Kw* with all its indices equal to -inf except those of the form
         D_(K+i, i), i = 1,..., K(w* -1) which are all equal to 0
@@ -168,14 +167,14 @@ def D_init(number_of_routers, max_window):
         number_of_routers : int
             Number of routers in the model.
         """
-    kw = max_window * number_of_routers
+    kw = configuration.max_window * configuration.number_of_routers
     d = Matrix(dims=(kw, kw), fill=float("-inf"))
-    for i in range(kw - number_of_routers):
-        d[number_of_routers + i, i] = 0
+    for i in range(kw - configuration.number_of_routers):
+        d[configuration.number_of_routers + i, i] = 0
     return d
 
 
-def A_from_components(packet_number, number_of_routers, max_window, packet_v_n):
+def A_from_components(packet_number, configuration):
     """ This generates Matrix D given a max window size w* and number of routers in the model K.
         D is a matrix of dimension Kw* with all its indices equal to -inf except those of the form
         D_(K+i, i), i = 1,..., K(w* -1) which are all equal to 0
@@ -189,20 +188,20 @@ def A_from_components(packet_number, number_of_routers, max_window, packet_v_n):
         number_of_routers : int
             Number of routers in the model.
         """
-    product = M_init(packet_number, number_of_routers)  # initialize to M
+    product = M_init(packet_number, configuration.number_of_routers)  # initialize to M
     # print("M: \n", product)
 
-    mprime = MPrime_init(packet_number, number_of_routers)
+    mprime = MPrime_init(packet_number, configuration.number_of_routers)
     # print("Mprime: \n", mprime)
 
-    k_epsilon = Matrix(dims=(number_of_routers, number_of_routers), fill=float("-inf"))
+    k_epsilon = Matrix(dims=(configuration.number_of_routers, configuration.number_of_routers), fill=float("-inf"))
     # print("KxK Epsilon: \n", k_epsilon)
 
-    D = D_init(number_of_routers, max_window)
+    D = D_init(configuration)
 
     Next_block = 0
     put_m = True
-    block_for_mprime = packet_v_n - 1
+    block_for_mprime = config.vn[packet_number] -1
 
     if block_for_mprime < 0:
         raise Exception("v_n-1 needs to be greater than -1")
@@ -210,7 +209,7 @@ def A_from_components(packet_number, number_of_routers, max_window, packet_v_n):
         product = product + mprime
         # print("product after plus \n", product)
         put_m = False
-    while Next_block != num_routers - 1:
+    while Next_block != configuration.number_of_routers - 1:
         if put_m and block_for_mprime - 1 == Next_block:
             # print("product \n:", product)
             product = product.concatenate_h(mprime)
@@ -223,48 +222,33 @@ def A_from_components(packet_number, number_of_routers, max_window, packet_v_n):
     return final
 
 
-def Z_gen(packet_number, number_of_routers, max_window):
-    z_initial, current_v_n = Z_init(packet_number, number_of_routers, max_window)
-    a_n = A_from_components(packet_number, number_of_routers, max_window, current_v_n)
+def Z_gen(packet_number, configuration):
+    z_initial = Z_init(packet_number, configuration)
+    a_n = A_from_components(packet_number, configuration)
     z_next = a_n @ z_initial
     return z_next
 
-def Z_continuous(starting_packet_number, ending_packet_number, number_of_routers, max_window, vn_seq):
-    z_initial, vn = Z_init(starting_pakcet_number, number_of_routers, max_window)
 
-    a_n = A_from_components(packet_number, number_of_routers, max_window, current_v_n)
-    current_packet = starting_packet_number
-    while current_packet < ending_packet_number:
-
-
-pkt = 9
-
-v_n = 1
-m_window = 4
-num_routers = 4
 #
-AVBADY = A_from_components(pkt, num_routers, m_window, v_n)
-print(AVBADY)
-#
+# AVBADY = A_from_components(0, config)
+# print(AVBADY)
+pkt = 2
 
-Z_test = Z_gen(pkt, num_routers, m_window)
+Z_test = Z_gen(pkt, config)
 result = Z_test.transpose()
 print(result)
 
-# y = Make_Y(pkt+1, m_window, m_window)
+# y = Make_Y(pkt, config)
 # pprint(y)
-
-# Z_test, v_n = Z_init(pkt, num_routers, m_window)
-# print(Z_test)
-# print(v_n)
 #
+# Z_test= Z_init(pkt, config)
+# print(Z_test)
 
-
-# M_test = M_init(50, 4)
+# M_test = M_init(50, config.number_of_routers)
 # print(M_test)
 #
-# Mprime_test = MPrime_init(0, 4)
+# Mprime_test = MPrime_init(0, config.number_of_routers)
 # print(Mprime_test)
 #
-# D_test = D_init(4, 4)
+# D_test = D_init(config)
 # print(D_test)
