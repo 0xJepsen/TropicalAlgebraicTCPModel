@@ -36,7 +36,6 @@ def Make_Y(number_of_packets, configuration):
     init = {}
     for j in range(0, number_of_packets + 1):
         # loop through packets
-        print("Packet: ", j)
         for i in range(0, configuration.number_of_routers):
             # loop through routers
             if i == 0:
@@ -201,7 +200,7 @@ def A_from_components(packet_number, configuration):
 
     Next_block = 0
     put_m = True
-    block_for_mprime = config.vn[packet_number] -1
+    block_for_mprime = config.vn[packet_number % 9] - 1
 
     if block_for_mprime < 0:
         raise Exception("v_n-1 needs to be greater than -1")
@@ -229,14 +228,31 @@ def Z_gen(packet_number, configuration):
     return z_next
 
 
+def Z_continuous(starting_packet_number, ending_packet_number, configuration):
+    z_initial = Z_init(starting_packet_number, configuration)
+    current_packet = starting_packet_number
+    zeees = {current_packet: z_initial}
+    while current_packet < ending_packet_number:
+        a_n = A_from_components(current_packet, configuration)
+        znext = a_n @ z_initial
+        zeees[current_packet + 1] = znext
+        z_initial = znext
+        current_packet += 1
+    return zeees
+
+
 #
 # AVBADY = A_from_components(0, config)
 # print(AVBADY)
-pkt = 2
 
-Z_test = Z_gen(pkt, config)
-result = Z_test.transpose()
-print(result)
+ze = Z_continuous(0, 5, config)
+for m in ze.values():
+    z = m.transpose()
+    print(z)
+
+# Z_test = Z_gen(pkt, config)
+# result = Z_test.transpose()
+# print(result)
 
 # y = Make_Y(pkt, config)
 # pprint(y)
