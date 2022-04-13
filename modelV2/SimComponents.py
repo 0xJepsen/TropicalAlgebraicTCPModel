@@ -69,10 +69,10 @@ class PacketGenerator(object):
 
     """
 
-    def __init__(self, env, id, adist, size, link_rate, initial_delay=0, finish=float("inf"), flow_id=0):
+    def __init__(self, env, id, size, link_rate, initial_delay=0, finish=float("inf"), flow_id=0):
         self.id = id
         self.env = env
-        self.adist = adist
+        # self.adist = adist
         self.size = size
         self.link_rate = link_rate
         self.initial_delay = initial_delay
