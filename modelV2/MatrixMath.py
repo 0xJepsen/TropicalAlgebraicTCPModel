@@ -14,7 +14,7 @@ class Matrix:
 
         for i in range(m):
             mtxStr += (
-                "|" + ", ".join(map(lambda x: "{0:7.3f}".format(x), self.A[i])) + "|\n"
+                    "|" + ", ".join(map(lambda x: "{0:7.2f}".format(x), self.A[i])) + "|\n"
             )
 
         mtxStr += "----------------------------------"
@@ -116,3 +116,10 @@ class Matrix:
                     c[i, j] = self.A[i][j]
         return c
 
+    def transpose(self):
+        c = Matrix(dims=(self.cols, self.rows), fill=float("-inf"))
+        for i in range(self.rows):
+            for j in range(self.cols):
+                c[j, i] = self.A[i][j]
+
+        return c
