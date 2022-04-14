@@ -25,10 +25,10 @@ NUMBER_OF_SWITCHES = 4
 
 # TODO: abstract these to be defined when the network initializes
 
-def simulate():
+def simulate(conf):
     env = simpy.Environment()  # Create the SimPy environment
     pg = PacketGenerator(
-        env, "Generator", distSize, LINK_BANDWIDTH
+        env, "Generator", distSize, LINK_BANDWIDTH, conf.max_window
     )
     s1 = SwitchPort(1, env, rate=SWITCH_BANDWIDTH, qlimit=SWITCH_QSIZE)
     s2 = SwitchPort(2, env, rate=SWITCH_BANDWIDTH, qlimit=SWITCH_QSIZE)
@@ -59,15 +59,15 @@ def simulate():
 
 
 # Create the packet generators and sink
-def validate_Y():
+def validate_Y(conf):
     # TODO: ABSTRACT parameters
-    df_simulated, ps = simulate()
+    df_simulated, ps = simulate(conf)
     """Logic for error extraction of Y_n"""
     df_simulated_departures = df_simulated.loc[:, ["departures"]]
     print("---------- Simulated Departure Data ----------")
     pprint(df_simulated_departures.head())
 
-    generated_departures = Make_Y(ps.packets_rec - 1, config)
+    generated_departures = Make_Y(ps.packets_rec - 1, conf)
     df_generated = pd.DataFrame.from_dict(generated_departures, orient='index')
     print("---------- Generated Departure Data ----------")
     pprint(df_generated.head())
@@ -86,20 +86,16 @@ def validate_Y():
     ax = df_errors.plot()
     ax.set_ylabel('Quantity of Error')
     ax.set_xlabel('Packet Number')
-    # plt.show()
+    plt.show()
 
 
 def validate_Z(conf):
-    df_simulated, ps = simulate()
+    df_simulated, ps = simulate(conf)
     print("---------- Simulated Departure Data ----------")
     simulated_departures = df_simulated.loc[:, ["departures", "V_n"]]
-    # generated_departures = Make_Y(ps.packets_rec - 1, 4, 4)
-    # df_generated = pd.DataFrame.from_dict(generated_departures, orient='index')
-    # print("---------- Generated Departure Data ----------")
+
     current_packet = 0
     errors_by_z = {}
-    # print(simulated_departures.head())
-    # print(simulated_departures["departures"][0])
 
     zeee = Z_continuous(current_packet, ps.packets_rec-1, conf)
     for m in zeee.keys():
@@ -129,14 +125,11 @@ def validate_Z(conf):
 
             errors_by_z[m] = errors
     df = pd.DataFrame()
-    idx = 0
     for key in errors_by_z.keys():
         df_errors = pd.DataFrame.from_dict(errors_by_z[key], orient='index')
         df_errors["sum"] = df_errors[["Router 0", "Router 1", "Router 2", "Router 3"]].sum(axis=1)
-        # pprint(df_errors.head())
         df = pd.concat([df, df_errors]).drop_duplicates(subset=['packet'])
 
-    # df.sort()
     pprint(df.head())
     print("---------- Error In Departure Times ----------")
     print(df.iloc[0:10])

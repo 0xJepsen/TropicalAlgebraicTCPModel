@@ -9,8 +9,6 @@ import copy
 from simpy.core import BoundClass
 from simpy.resources import base
 from heapq import heappush, heappop
-import threading
-
 
 class Packet(object):
     """ A very simple class that represents a packet.
@@ -69,10 +67,9 @@ class PacketGenerator(object):
 
     """
 
-    def __init__(self, env, id, size, link_rate, initial_delay=0, finish=float("inf"), flow_id=0):
+    def __init__(self, env, id, size, link_rate, max_window, initial_delay=0, finish=float("inf"), flow_id=0):
         self.id = id
         self.env = env
-        # self.adist = adist
         self.size = size
         self.link_rate = link_rate
         self.initial_delay = initial_delay
@@ -87,7 +84,7 @@ class PacketGenerator(object):
         self.acks = 0
         self.last_sent = None
         self.last_received = None
-        self.max_window = 4
+        self.max_window = max_window
         self.sent_per_window = 0
         self.seen_ack = []
 
@@ -99,7 +96,6 @@ class PacketGenerator(object):
         while self.env.now < self.finish:
             if self.init:
                 p = self.gen_packets()
-                # print("V_n for packet 0: ", self.window)
                 p.v_n = self.window
                 self.init = False
                 # first ack
@@ -214,6 +210,15 @@ class PacketSink(object):
 
 class Link(object):
 
+    """ Receives packets, yields a link time and sends them to next resources store.
+        Parameters
+        ----------
+        env : simpy.Environment
+            the simulation environment
+        rate : float
+            the bit rate of the link
+    """
+
     def __init__(self, id, env, rate):
         self.id = id
         self.rate = rate
@@ -225,11 +230,8 @@ class Link(object):
     def run(self):
         while True:
             with self.store.get() as re:
-                # print("Waiting for pck")
                 msg = yield re
-                # print("received pckt. Processing...")
                 yield self.env.timeout(msg.size / self.rate)
-                # print("Processed pck, sent to switch ...")
                 self.out.put(msg)
 
     def put(self, pkt):
@@ -270,17 +272,12 @@ class SwitchPort(object):
         self.debug = debug
         self.busy = 0  # Used to track if a packet is currently being sent
         self.action = env.process(self.run())  # starts the run() method as a SimPy process
-        self.input_thread = threading.Event()
-        # self.tasks = [([self.input, self.output], [self.process_input(), self.process_output()])]
 
     def run(self):
         while True:
             with self.input.get() as request:
-                # print("ROUTER {} Waiting for output".format(self.id))
                 msg = yield request
                 msg.arrival[self.id] = int(self.env.now)
-                # print("ROUTER {} output received packet {} at time {}".format(self.id, msg.id, self.env.now))
-                # print("ROUTER {} output processing link time for packet {}...".format(self.id, msg.id))
                 yield self.env.timeout(msg.ltime)  # processing time
                 msg.departure[self.id] = int(self.env.now)
                 self.out.put(msg)
