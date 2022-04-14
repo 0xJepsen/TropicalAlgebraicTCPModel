@@ -195,7 +195,8 @@ def A_from_components(packet_number, configuration):
 
     Next_block = 0
     put_m = True
-    block_for_mprime = config.vn[packet_number % 9] - 1
+    block_for_mprime = config.vn[packet_number % 10] - 1
+    print(block_for_mprime)
 
     if block_for_mprime < 0:
         raise Exception("v_n-1 needs to be greater than -1")
@@ -237,10 +238,10 @@ def Z_continuous(starting_packet_number, ending_packet_number, configuration):
 
 
 #
-# AVBADY = A_from_components(0, config)
+# AVBADY = A_from_components(2, config)
 # print(AVBADY)
 
-# ze = Z_continuous(0, 10, config)
+# ze = Z_continuous(0, 12, config)
 # for m in ze.keys():
 #     print("N=", m)
 #     z = ze[m].transpose()
@@ -250,16 +251,16 @@ def Z_continuous(starting_packet_number, ending_packet_number, configuration):
 # result = Z_test.transpose()
 # print(result)
 
-y = Make_Y(10, config)
-pprint(y)
-#
+# y = Make_Y(13, config)
+# pprint(y)
+
 # Z_test= Z_init(pkt, config)
 # print(Z_test)
 
-# M_test = M_init(50, config.number_of_routers)
+# M_test = M_init(1, config.number_of_routers)
 # print(M_test)
 #
-# Mprime_test = MPrime_init(0, config.number_of_routers)
+# Mprime_test = MPrime_init(14, config.number_of_routers)
 # print(Mprime_test)
 #
 # D_test = D_init(config)

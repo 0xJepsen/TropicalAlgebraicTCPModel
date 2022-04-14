@@ -14,7 +14,7 @@ class Matrix:
 
         for i in range(m):
             mtxStr += (
-                    "|" + ", ".join(map(lambda x: "{0:7.0f}".format(x), self.A[i])) + "|\n"
+                    "|" + ", ".join(map(lambda x: "{0:5.0f}".format(x), self.A[i])) + "|\n"
             )
 
         mtxStr += "----------------------------------"

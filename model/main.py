@@ -87,13 +87,17 @@ def validate_Y(conf):
     ax.set_ylabel('Quantity of Error')
     ax.set_xlabel('Packet Number')
     plt.title("Error Between Y(n) and Simulated Traffic")
-    # plt.show()
+    plt.show()
 
 
-def validate_Z(conf):
+def validate_Z(conf, flag=False):
     df_simulated, ps = simulate(conf)
-    print("---------- Simulated Departure Data ----------")
-    simulated_departures = df_simulated.loc[:, ["departures", "V_n"]]
+    if flag:
+        generated_departures = Make_Y(ps.packets_rec - 1, conf)
+        data = pd.DataFrame.from_dict(generated_departures, orient='index')
+    else:
+        print("---------- Simulated Departure Data ----------")
+        data = df_simulated.loc[:, ["departures", "V_n"]]
 
     current_packet = 0
     errors_by_z = {}
@@ -111,7 +115,7 @@ def validate_Z(conf):
                 errors[current_index_packet]['packet'] = current_index_packet
             else:
                 errors[current_index_packet]['Router {}'.format(j % conf.number_of_routers)] = \
-                    abs((z[0, j]) - simulated_departures["departures"][current_index_packet][j % conf.number_of_routers])
+                    abs((z[0, j]) - data["departures"][current_index_packet][j % conf.number_of_routers])
                 breakpoint += 1
                 errors[current_index_packet]['packet'] = current_index_packet
             if j % conf.number_of_routers == conf.number_of_routers - 1:
@@ -137,15 +141,27 @@ def validate_Z(conf):
     plt.title("Error Between Z(n) and Simulated Traffic")
     plt.show()
 
+def validate_z_against_y(conf):
+    df_simulated, ps = simulate(conf)
+    print("---------- Simulated Departure Data ----------")
+    simulated_departures = df_simulated.loc[:, ["departures", "V_n"]]
+    pprint(simulated_departures.head())
+    generated_departures = Make_Y(ps.packets_rec - 1, conf)
+    df_generated = pd.DataFrame.from_dict(generated_departures, orient='index')
+    print("---------- Generated Departure Data ----------")
+    pprint(df_generated.head())
+
+
 
 def main():
     # validate_Y(config)
-    generated_departures = Make_Y(10, config)
-    df_generated = pd.DataFrame.from_dict(generated_departures, orient='index')
-    print("---------- Generated Departure Data ----------")
-    pprint(df_generated)
+    # validate_z_against_y(config)
+    # generated_departures = Make_Y(10, config)
+    # df_generated = pd.DataFrame.from_dict(generated_departures, orient='index')
+    # print("---------- Generated Departure Data ----------")
+    # pprint(df_generated)
 
-    # validate_Z(config)
+    validate_Z(config)
     # df_simulated, ps = simulate(config)
     # pprint(df_simulated)
 
