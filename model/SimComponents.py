@@ -1,6 +1,6 @@
 """
     A restructure of simulation components from Greg M. Bernstein
-    Most is all original work from Waylon Jepsen, as the initial sim compents
+    Most is all original work from Waylon Jepsen, as the initial sim components
     didn't fit my needs.
 """
 import simpy
@@ -9,6 +9,7 @@ import copy
 from simpy.core import BoundClass
 from simpy.resources import base
 from heapq import heappush, heappop
+
 
 class Packet(object):
     """ A very simple class that represents a packet.
@@ -87,6 +88,7 @@ class PacketGenerator(object):
         self.max_window = max_window
         self.sent_per_window = 0
         self.seen_ack = []
+        self.busy = {}
 
     def run(self):
         """The generator function used in simulations.
@@ -96,6 +98,7 @@ class PacketGenerator(object):
         while self.env.now < self.finish:
             if self.init:
                 p = self.gen_packets()
+                self.busy[self.env.now] = 1
                 p.v_n = self.window
                 self.init = False
                 # first ack
@@ -109,8 +112,10 @@ class PacketGenerator(object):
 
                 self.acks += 1
             while self.sent_per_window <= self.window:
+                # if self.env.now in self.busy and self.busy[self.env.now] != 1:
                 if (self.last_sent + 1 - p.v_n) in self.seen_ack:
                     p = self.gen_packets()
+                    self.busy[self.env.now] =1
                     p.v_n = self.window
                 else:
                     msg = yield self.store.get()
@@ -131,13 +136,13 @@ class PacketGenerator(object):
     def gen_packets(self):
         p = Packet(self.env.now, self.size, self.packets_sent, src=self.id, flow_id=self.flow_id)
         p.ltime = p.size / self.link_rate
-        p.departure[0] = int(self.env.now)
         # print(p)
         self.packets_sent += 1
         self.sent_per_window += 1
         self.last_sent = p.id
         self.out.put(p)
-        self.env.timeout(p.ltime)
+        print("Current Time Packet {} leaves: {}".format(p.id, self.env.now))
+        p.departure[0] = int(self.env.now)
         return p
 
     def put(self, pkt):
@@ -209,7 +214,6 @@ class PacketSink(object):
 
 
 class Link(object):
-
     """ Receives packets, yields a link time and sends them to next resources store.
         Parameters
         ----------
@@ -230,7 +234,9 @@ class Link(object):
     def run(self):
         while True:
             with self.store.get() as re:
+                # msg
                 msg = yield re
+
                 yield self.env.timeout(msg.size / self.rate)
                 self.out.put(msg)
 

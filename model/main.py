@@ -17,7 +17,7 @@ distSize = 10
 SWITCH_BANDWIDTH = 10
 LINK_BANDWIDTH = 10
 SWITCH_QSIZE = 50
-SIM_TIME = 75
+SIM_TIME = 100
 
 WINDOW_SIZE = 4
 NUMBER_OF_SWITCHES = 4
@@ -86,13 +86,18 @@ def validate_Y(conf):
     ax = df_errors.plot()
     ax.set_ylabel('Quantity of Error')
     ax.set_xlabel('Packet Number')
+    plt.title("Error Between Y(n) and Simulated Traffic")
     plt.show()
 
 
-def validate_Z(conf):
+def validate_Z(conf, flag=False):
     df_simulated, ps = simulate(conf)
-    print("---------- Simulated Departure Data ----------")
-    simulated_departures = df_simulated.loc[:, ["departures", "V_n"]]
+    if flag:
+        generated_departures = Make_Y(ps.packets_rec - 1, conf)
+        data = pd.DataFrame.from_dict(generated_departures, orient='index')
+    else:
+        print("---------- Simulated Departure Data ----------")
+        data = df_simulated.loc[:, ["departures", "V_n"]]
 
     current_packet = 0
     errors_by_z = {}
@@ -109,17 +114,13 @@ def validate_Z(conf):
                 errors[current_index_packet]['Router {}'.format(j % conf.number_of_routers)] = 0
                 errors[current_index_packet]['packet'] = current_index_packet
             else:
-                print(z[0,j])
-                print("current index packet", current_index_packet)
-                print(simulated_departures["departures"][current_index_packet][j % conf.number_of_routers])
                 errors[current_index_packet]['Router {}'.format(j % conf.number_of_routers)] = \
-                    abs((z[0, j]) - simulated_departures["departures"][current_index_packet][j % conf.number_of_routers])
+                    abs((z[0, j]) - data["departures"][current_index_packet][j % conf.number_of_routers])
                 breakpoint += 1
                 errors[current_index_packet]['packet'] = current_index_packet
             if j % conf.number_of_routers == conf.number_of_routers - 1:
                 current_index_packet -= 1
                 total_pkts += 1
-                print("Total Packets", total_pkts)
                 if total_pkts < conf.number_of_routers:
                     errors[current_index_packet] = {}
 
@@ -132,18 +133,37 @@ def validate_Z(conf):
 
     pprint(df.head())
     print("---------- Error In Departure Times ----------")
-    print(df.iloc[0:10])
     new = df.drop(columns=["packet"], axis=1)
-    pprint(new.head())
+    pprint(new)
     ax = new.plot()
     ax.set_ylabel('Quantity of Error')
     ax.set_xlabel('Packet Number')
+    plt.title("Error Between Z(n) and Simulated Traffic")
     plt.show()
+
+def validate_z_against_y(conf):
+    df_simulated, ps = simulate(conf)
+    print("---------- Simulated Departure Data ----------")
+    simulated_departures = df_simulated.loc[:, ["departures", "V_n"]]
+    pprint(simulated_departures.head())
+    generated_departures = Make_Y(ps.packets_rec - 1, conf)
+    df_generated = pd.DataFrame.from_dict(generated_departures, orient='index')
+    print("---------- Generated Departure Data ----------")
+    pprint(df_generated.head())
+
 
 
 def main():
-    # validate_Y()
+    # validate_Y(config)
+    # validate_z_against_y(config)
+    # generated_departures = Make_Y(10, config)
+    # df_generated = pd.DataFrame.from_dict(generated_departures, orient='index')
+    # print("---------- Generated Departure Data ----------")
+    # pprint(df_generated)
+
     validate_Z(config)
+    # df_simulated, ps = simulate(config)
+    # pprint(df_simulated)
 
 
 if __name__ == '__main__':
