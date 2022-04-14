@@ -43,8 +43,8 @@ def Make_Y(number_of_packets, configuration):
                 else:
                     """y_o(n) = Y_K(n - v_n-1) + d_(K,0)"""
                     init[j] = {'departures': {
-                        0: init[j - init[j - 1]['V_n']]['departures'][configuration.number_of_routers - 1] +
-                           delay(configuration.number_of_routers - 1, 0)}}
+                        0: max(init[j - init[j - 1]['V_n']]['departures'][configuration.number_of_routers - 1] +
+                               delay(configuration.number_of_routers - 1, 0), init[j - 1]['departures'][0] + sigma())}}
                     sent += 1
                     init[j]['V_n'] = running_window
             else:
@@ -250,8 +250,8 @@ def Z_continuous(starting_packet_number, ending_packet_number, configuration):
 # result = Z_test.transpose()
 # print(result)
 
-# y = Make_Y(pkt, config)
-# pprint(y)
+y = Make_Y(10, config)
+pprint(y)
 #
 # Z_test= Z_init(pkt, config)
 # print(Z_test)

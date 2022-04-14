@@ -17,7 +17,7 @@ distSize = 10
 SWITCH_BANDWIDTH = 10
 LINK_BANDWIDTH = 10
 SWITCH_QSIZE = 50
-SIM_TIME = 75
+SIM_TIME = 100
 
 WINDOW_SIZE = 4
 NUMBER_OF_SWITCHES = 4
@@ -87,7 +87,7 @@ def validate_Y(conf):
     ax.set_ylabel('Quantity of Error')
     ax.set_xlabel('Packet Number')
     plt.title("Error Between Y(n) and Simulated Traffic")
-    plt.show()
+    # plt.show()
 
 
 def validate_Z(conf):
@@ -129,9 +129,8 @@ def validate_Z(conf):
 
     pprint(df.head())
     print("---------- Error In Departure Times ----------")
-    print(df.iloc[0:10])
     new = df.drop(columns=["packet"], axis=1)
-    pprint(new.head())
+    pprint(new)
     ax = new.plot()
     ax.set_ylabel('Quantity of Error')
     ax.set_xlabel('Packet Number')
@@ -140,8 +139,15 @@ def validate_Z(conf):
 
 
 def main():
-    # validate_Y()
-    validate_Z(config)
+    # validate_Y(config)
+    generated_departures = Make_Y(10, config)
+    df_generated = pd.DataFrame.from_dict(generated_departures, orient='index')
+    print("---------- Generated Departure Data ----------")
+    pprint(df_generated)
+
+    # validate_Z(config)
+    # df_simulated, ps = simulate(config)
+    # pprint(df_simulated)
 
 
 if __name__ == '__main__':
