@@ -86,6 +86,7 @@ def validate_Y(conf):
     ax = df_errors.plot()
     ax.set_ylabel('Quantity of Error')
     ax.set_xlabel('Packet Number')
+    plt.title("Error Between Y(n) and Simulated Traffic")
     plt.show()
 
 
@@ -109,9 +110,6 @@ def validate_Z(conf):
                 errors[current_index_packet]['Router {}'.format(j % conf.number_of_routers)] = 0
                 errors[current_index_packet]['packet'] = current_index_packet
             else:
-                print(z[0,j])
-                print("current index packet", current_index_packet)
-                print(simulated_departures["departures"][current_index_packet][j % conf.number_of_routers])
                 errors[current_index_packet]['Router {}'.format(j % conf.number_of_routers)] = \
                     abs((z[0, j]) - simulated_departures["departures"][current_index_packet][j % conf.number_of_routers])
                 breakpoint += 1
@@ -119,7 +117,6 @@ def validate_Z(conf):
             if j % conf.number_of_routers == conf.number_of_routers - 1:
                 current_index_packet -= 1
                 total_pkts += 1
-                print("Total Packets", total_pkts)
                 if total_pkts < conf.number_of_routers:
                     errors[current_index_packet] = {}
 
@@ -138,6 +135,7 @@ def validate_Z(conf):
     ax = new.plot()
     ax.set_ylabel('Quantity of Error')
     ax.set_xlabel('Packet Number')
+    plt.title("Error Between Z(n) and Simulated Traffic")
     plt.show()
 
 

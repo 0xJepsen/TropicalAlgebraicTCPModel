@@ -1,6 +1,6 @@
 """
     A restructure of simulation components from Greg M. Bernstein
-    Most is all original work from Waylon Jepsen, as the initial sim compents
+    Most is all original work from Waylon Jepsen, as the initial sim components
     didn't fit my needs.
 """
 import simpy
@@ -9,6 +9,7 @@ import copy
 from simpy.core import BoundClass
 from simpy.resources import base
 from heapq import heappush, heappop
+
 
 class Packet(object):
     """ A very simple class that represents a packet.
@@ -209,7 +210,6 @@ class PacketSink(object):
 
 
 class Link(object):
-
     """ Receives packets, yields a link time and sends them to next resources store.
         Parameters
         ----------
