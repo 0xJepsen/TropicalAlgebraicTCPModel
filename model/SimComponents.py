@@ -8,6 +8,7 @@ import random
 import copy
 from simpy.core import BoundClass
 from simpy.resources import base
+from simpy.events import AnyOf, AllOf, Event
 from heapq import heappush, heappop
 
 
