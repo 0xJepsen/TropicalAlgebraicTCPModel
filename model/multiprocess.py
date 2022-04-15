@@ -1,5 +1,6 @@
 import simpy
 from SimComponents import PacketGenerator, PacketSink, SwitchPort, Link
+from Modelingfncs import Make_Y, delay, A_from_components, Z_continuous, Z_init
 import pandas as pd
 from pprint import pprint
 import matplotlib.pyplot as plt
@@ -55,9 +56,41 @@ def simulate(conf):
     df_simulated = df.transpose()
     return df_simulated, ps
 
+
+def validate_Y(conf):
+    # TODO: ABSTRACT parameters
+    df_simulated, ps = simulate(conf)
+    """Logic for error extraction of Y_n"""
+    df_simulated_departures = df_simulated.loc[:, ["departures"]]
+    print("---------- Simulated Departure Data ----------")
+    pprint(df_simulated_departures.head())
+
+    generated_departures = Make_Y(ps.packets_rec - 1, conf)
+    df_generated = pd.DataFrame.from_dict(generated_departures, orient='index')
+    print("---------- Generated Departure Data ----------")
+    pprint(df_generated.head())
+    errors = {}
+    for i in range(0, ps.packets_rec):
+        errors[i] = {}
+        for j in range(0, 4):
+            errors[i]['Router {}'.format(j)] = abs(
+                df_generated.values[i][0][j] - df_simulated_departures.values[i][0][j])
+
+    df_errors = pd.DataFrame.from_dict(errors, orient='index')
+    pprint(df_errors)
+    df_errors["sum"] = df_errors.sum(axis=1)
+
+    print("---------- Error In Departure Times ----------")
+    ax = df_errors.plot()
+    ax.set_ylabel('Quantity of Error')
+    ax.set_xlabel('Packet Number')
+    plt.title("Error Between Y(n) and Simulated Traffic")
+    plt.show()
+
 def run():
-    df_sim, ps = simulate(config)
-    print(df_sim)
+    # df_sim, ps = simulate(config)
+    # print(df_sim)
+    validate_Y(config)
 
 run()
 
