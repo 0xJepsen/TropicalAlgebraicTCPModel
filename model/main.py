@@ -40,12 +40,18 @@ def simulate(conf):
 
     # Wire packet generators and sink together
     pg.out = l1
-    l1.out = s1
-    s1.out = l2
-    l2.out = s2
-    s2.out = l3
-    l3.out = ps
-    ps.out = pg
+    l1.front = s1
+    s1.front = l2
+    l2.front = s2
+    s2.front = l3
+    l3.front = ps
+
+    ps.out = l3
+    l3.back = s2
+    s2.back = l2
+    l2.back = s1
+    s1.back = l1
+    l1.back = pg
     env.run(until=SIM_TIME)
 
     print(
