@@ -109,8 +109,8 @@ class PacketGenerator(object):
                 msg = yield self.received.get()
                 self.last_received = msg.id
                 self.seen_ack.append(msg.id)
-                # print("Recieved message: ", msg.id)
-                # print(self.env.now)
+                print("Recieved message: ", msg.id)
+                print(self.env.now)
                 yield self.env.timeout(1)
 
                 self.acks += 1
@@ -118,7 +118,7 @@ class PacketGenerator(object):
                 # if self.env.now in self.busy and self.busy[self.env.now] != 1:
                 if (self.last_sent + 1 - p.v_n) in self.seen_ack:
                     p = self.gen_packets()
-                    self.busy[self.env.now] =1
+                    self.busy[self.env.now] = 1
                     p.v_n = self.window
                 else:
                     msg = yield self.received.get()
@@ -252,7 +252,7 @@ class Link(object):
             with self.buf2.get() as re:
                 msg = yield re
                 print(msg)
-                yield self.env.timeout(msg.size / self.rate)
+                # yield self.env.timeout(msg.size / self.rate)
                 self.back.receive(msg)
 
     def send(self, pkt):
@@ -312,9 +312,9 @@ class SwitchPort(object):
         while True:
             with self.buf2.get() as request:
                 msg = yield request
-                msg.arrival[self.id] = int(self.env.now)
+                # msg.arrival[self.id] = int(self.env.now)
                 yield self.env.timeout(msg.ltime)  # processing time
-                msg.departure[self.id] = int(self.env.now)
+                # msg.departure[self.id] = int(self.env.now)
                 self.back.receive(msg)
 
     def send(self, pkt):
