@@ -49,6 +49,21 @@ class Packet(object):
             format(self.id, self.src, self.time, self.size)
 
 
+class Ack(object):
+
+    def __init__(self, pkt: Packet, src, dst):
+        self.size = 0.03 / pkt.size
+        self.id = pkt.id
+        self.arrival = {}
+        self.departure = {}
+        self.src = src
+        self.dst = dst
+
+    def __repr__(self):
+        return "id: {}, src: {}, dst: {}, size: {}". \
+            format(self.id, self.src, self.dst, self.size)
+
+
 class PacketGenerator(object):
     """ Generates packets with given inter-arrival time distribution.
         Set the "out" member variable to the entity to receive the packet.
