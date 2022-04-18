@@ -3,7 +3,6 @@ from MatrixMath import Matrix
 from Simulation import SimulationConfig
 
 config = SimulationConfig("test", 4, 4)
-config.make_Vn()
 
 
 def delay(src, dst):

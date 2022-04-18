@@ -17,7 +17,6 @@ class SimulationConfig(object):
         self.simtime = 50
         self.switch_que_size = 50
 
-    def make_Vn(self):
         vn = []
         for i in range(1, self.max_window + 1):
             for _ in range(0, i + 1):

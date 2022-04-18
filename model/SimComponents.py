@@ -39,7 +39,6 @@ class Packet(object):
         self.src = src
         self.dst = dst
         self.flow_id = flow_id
-        self.ltime = 0
         self.arrival = {}
         self.departure = {}
         self.v_n = 0
@@ -88,7 +87,7 @@ class PacketGenerator(object):
         self.id = id
         self.env = env
         self.size = size
-        self.link_rate = link_rate
+        self.processing_time = link_rate
         self.initial_delay = initial_delay
         self.finish = finish
         self.received = simpy.Store(env)
@@ -97,7 +96,7 @@ class PacketGenerator(object):
         self.back = None
         self.packets_sent = 0
         self.generate = env.process(self.send_it())
-        # self.run_buf2 = env.process(self.run_buffer_2())  # starts the run() method as a SimPy process
+        self.dst = None
         self.flow_id = flow_id
         self.window = 1  # slow start
         self.init = True
@@ -107,7 +106,6 @@ class PacketGenerator(object):
         self.max_window = max_window
         self.sent_per_window = 0
         self.seen_ack = []
-        self.busy = {}
 
     def send_it(self):
         """The generator function used in simulations.
@@ -117,7 +115,6 @@ class PacketGenerator(object):
         while self.env.now < self.finish:
             if self.init:
                 p = self.gen_packets()
-                self.busy[self.env.now] = 1
                 p.v_n = self.window
                 self.init = False
                 # first ack
@@ -129,18 +126,13 @@ class PacketGenerator(object):
 
                 self.acks += 1
             while self.sent_per_window <= self.window:
-                # if self.env.now in self.busy and self.busy[self.env.now] != 1:
                 if (self.last_sent + 1 - p.v_n) in self.seen_ack:
                     p = self.gen_packets()
-                    yield self.env.timeout(p.size / self.link_rate)
+                    yield self.env.timeout(p.size / self.processing_time)  # Sigma_0(p.id)
                     p.v_n = self.window
                 else:
                     msg = yield self.received.get()
                     self.last_received = msg.id
-                    print("Received ack for message {} at time {}".format(msg.id, self.env.now))
-                    print("supposed to send at time {}".format(msg.departure[3] + 3))
-                    while self.env.now != msg.departure[3] + 3:
-                        yield self.env.timeout(1)
                     self.seen_ack.append(msg.id)
                     self.acks += 1
                 if self.window == self.max_window and self.sent_per_window > 0:
@@ -150,20 +142,16 @@ class PacketGenerator(object):
                     self.window += 1
                     self.sent_per_window = 0
 
-                print("end")
-
     def receive(self, pkt):
         self.received.put(pkt)
 
     def gen_packets(self):
-        p = Packet(self.env.now, self.size, self.packets_sent, src=self.id, flow_id=self.flow_id)
-        p.ltime = p.size / self.link_rate
-        # print(p)
+        p = Packet(self.env.now, self.size, self.packets_sent, src=self.id, dst=self.dst, flow_id=self.flow_id)
+        p.dst = self.dst
         self.packets_sent += 1
         self.sent_per_window += 1
         self.last_sent = p.id
         self.out.send(p)
-        print("Current Time Packet {} leaves: {}".format(p.id, self.env.now))
         p.departure[0] = int(self.env.now)
         return p
 
@@ -222,12 +210,16 @@ class PacketSink(object):
             self.data[msg.id] = {
                 "arrivals": msg.arrival,
                 "departures": msg.departure,
-                "link time": msg.ltime,
+                "link time": msg.size / self.rate,
                 "V_n": msg.v_n,
             }
             self.out.receive(msg)
             if self.debug:
                 print(msg)
+
+    def generate_Ack(self, pkt: Packet):
+        ack = Ack(pkt, self.id, pkt.dst)
+        return ack
 
     def set_arrival(self, pkt):
         pkt.arrival[self.id] = round(self.env.now, 3)
@@ -305,8 +297,8 @@ class SwitchPort(object):
         self.env = env
         self.run_buf1 = env.process(self.run_buffer_1())
         self.run_buf2 = env.process(self.run_buffer_2())
-        self.front = None
-        self.back = None
+        self.front = []
+        self.back = []
         self.time_last_sent = 0
         self.packets_rec = 0
         self.packets_drop = 0
@@ -316,13 +308,15 @@ class SwitchPort(object):
         self.debug = debug
         self.busy = 0  # Used to track if a packet is currently being sent
 
+    # def decide_port(self):
+
     def run_buffer_1(self):
         while True:
             with self.buf1.get() as request:
                 msg = yield request
                 msg.arrival[self.id] = int(self.env.now)
                 print("Arrival of Pkt {} at Switch {}: {}".format(msg.id, self.id, self.env.now))
-                yield self.env.timeout(msg.ltime)  # processing time
+                yield self.env.timeout(msg.size / self.rate)  # processing time
                 msg.departure[self.id] = int(self.env.now)
                 print("departure of Pkt {} at Switch {}: {}".format(msg.id, self.id, self.env.now))
                 self.front.send(msg)
@@ -332,7 +326,7 @@ class SwitchPort(object):
             with self.buf2.get() as request:
                 msg = yield request
                 # msg.arrival[self.id] = int(self.env.now)
-                # yield self.env.timeout(msg.ltime)  # processing time
+                # yield self.env.timeout(msg.size / self.rate)  # processing time
                 # msg.departure[self.id] = int(self.env.now)
                 self.back.receive(msg)
 

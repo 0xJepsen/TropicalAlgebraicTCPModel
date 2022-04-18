@@ -7,10 +7,10 @@ from pprint import pprint
 import matplotlib.pyplot as plt
 from Simulation import SimulationConfig
 
+
 # def distSize():
 #     return expovariate(0.01)
 config = SimulationConfig("sim1", 4, 4)
-config.make_Vn()
 
 distSize = 10
 SWITCH_BANDWIDTH = 10
@@ -107,7 +107,7 @@ def validate_Z(conf, flag=False):
     current_packet = 0
     errors_by_z = {}
 
-    zeee = Z_continuous(current_packet, ps.packets_rec - 1, conf)
+    zeee = Z_continuous(current_packet, ps.packets_rec-1, conf)
     for m in zeee.keys():
         z = zeee[m].transpose()
         current_index_packet = m
@@ -158,6 +158,7 @@ def validate_z_against_y(conf):
     pprint(df_generated.head())
 
 
+
 def main():
     # validate_Y(config)
     # sim, ps = simulate(config)
@@ -168,7 +169,7 @@ def main():
     # print("---------- Generated Departure Data ----------")
     # pprint(df_generated)
 
-    validate_Z(config)
+    # validate_Z(config)
     # df_simulated, ps = simulate(config)
     # pprint(df_simulated)
 
