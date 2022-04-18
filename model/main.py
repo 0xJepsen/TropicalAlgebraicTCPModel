@@ -7,7 +7,6 @@ from pprint import pprint
 import matplotlib.pyplot as plt
 from Simulation import SimulationConfig
 
-
 # def distSize():
 #     return expovariate(0.01)
 config = SimulationConfig("sim1", 4, 4)
@@ -108,7 +107,7 @@ def validate_Z(conf, flag=False):
     current_packet = 0
     errors_by_z = {}
 
-    zeee = Z_continuous(current_packet, ps.packets_rec-1, conf)
+    zeee = Z_continuous(current_packet, ps.packets_rec - 1, conf)
     for m in zeee.keys():
         z = zeee[m].transpose()
         current_index_packet = m
@@ -147,6 +146,7 @@ def validate_Z(conf, flag=False):
     plt.title("Error Between Z(n) and Simulated Traffic")
     plt.show()
 
+
 def validate_z_against_y(conf):
     df_simulated, ps = simulate(conf)
     print("---------- Simulated Departure Data ----------")
@@ -156,7 +156,6 @@ def validate_z_against_y(conf):
     df_generated = pd.DataFrame.from_dict(generated_departures, orient='index')
     print("---------- Generated Departure Data ----------")
     pprint(df_generated.head())
-
 
 
 def main():
