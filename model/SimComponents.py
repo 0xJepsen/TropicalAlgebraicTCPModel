@@ -109,20 +109,21 @@ class PacketGenerator(object):
                 msg = yield self.received.get()
                 self.last_received = msg.id
                 self.seen_ack.append(msg.id)
-                print("Recieved message: ", msg.id)
+                print("Received message: ", msg.id)
                 print(self.env.now)
-                yield self.env.timeout(1)
 
                 self.acks += 1
             while self.sent_per_window <= self.window:
                 # if self.env.now in self.busy and self.busy[self.env.now] != 1:
                 if (self.last_sent + 1 - p.v_n) in self.seen_ack:
                     p = self.gen_packets()
-                    self.busy[self.env.now] = 1
+                    yield self.env.timeout(p.size / self.link_rate)
                     p.v_n = self.window
                 else:
                     msg = yield self.received.get()
                     self.last_received = msg.id
+                    print("Received ack for message {} at time {}".format(msg.id, self.env.now))
+                    print("supposed to send at time {}".format(msg.departure[3] + 3))
                     while self.env.now != msg.departure[3] + 3:
                         yield self.env.timeout(1)
                     self.seen_ack.append(msg.id)
@@ -201,6 +202,7 @@ class PacketSink(object):
             msg.arrival[self.id] = int(self.env.now)
             yield self.env.timeout(msg.size / self.rate)  # processing time
             msg.departure[self.id] = int(self.env.now)
+            print("Time pkt {} leaves Sink: {}".format(msg.id, self.env.now))
             self.packets_rec += 1
             self.data[msg.id] = {
                 "arrivals": msg.arrival,
@@ -251,8 +253,8 @@ class Link(object):
         while True:
             with self.buf2.get() as re:
                 msg = yield re
-                print(msg)
-                # yield self.env.timeout(msg.size / self.rate)
+                yield self.env.timeout(msg.size / self.rate)
+                print("received ack for for pkt {} at time {}".format(msg.id, self.env.now))
                 self.back.receive(msg)
 
     def send(self, pkt):
@@ -304,8 +306,10 @@ class SwitchPort(object):
             with self.buf1.get() as request:
                 msg = yield request
                 msg.arrival[self.id] = int(self.env.now)
+                print("Arrival of Pkt {} at Switch {}: {}".format(msg.id, self.id, self.env.now))
                 yield self.env.timeout(msg.ltime)  # processing time
                 msg.departure[self.id] = int(self.env.now)
+                print("departure of Pkt {} at Switch {}: {}".format(msg.id, self.id, self.env.now))
                 self.front.send(msg)
 
     def run_buffer_2(self):
@@ -313,7 +317,7 @@ class SwitchPort(object):
             with self.buf2.get() as request:
                 msg = yield request
                 # msg.arrival[self.id] = int(self.env.now)
-                yield self.env.timeout(msg.ltime)  # processing time
+                # yield self.env.timeout(msg.ltime)  # processing time
                 # msg.departure[self.id] = int(self.env.now)
                 self.back.receive(msg)
 

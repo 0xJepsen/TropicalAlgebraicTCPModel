@@ -161,6 +161,8 @@ def validate_z_against_y(conf):
 
 def main():
     # validate_Y(config)
+    # sim, ps = simulate(config)
+    # print(sim)
     # validate_z_against_y(config)
     # generated_departures = Make_Y(10, config)
     # df_generated = pd.DataFrame.from_dict(generated_departures, orient='index')
