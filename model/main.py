@@ -33,11 +33,16 @@ def simulate(conf):
     s2 = SwitchPort(2, env, rate=SWITCH_BANDWIDTH, qlimit=SWITCH_QSIZE)
     ps = PacketSink(3, env, rate=SWITCH_BANDWIDTH, qlimit=SWITCH_QSIZE)
 
-    l1 = Link(0, env, LINK_BANDWIDTH)
-    l2 = Link(1, env, LINK_BANDWIDTH)
-    l3 = Link(2, env, LINK_BANDWIDTH)
+    l1 = Link(env, LINK_BANDWIDTH)
+    l2 = Link(env, LINK_BANDWIDTH)
+    l3 = Link(env, LINK_BANDWIDTH)
+
+    # Set Destination for packets from pg
+
+    pg.dst = ps.id
 
     # Wire packet generators and sink together
+
     pg.out = l1
     l1.front = s1
     s1.front = l2
@@ -161,8 +166,8 @@ def validate_z_against_y(conf):
 
 def main():
     # validate_Y(config)
-    # sim, ps = simulate(config)
-    # print(sim)
+    sim, ps = simulate(config)
+    print(sim)
     # validate_z_against_y(config)
     # generated_departures = Make_Y(10, config)
     # df_generated = pd.DataFrame.from_dict(generated_departures, orient='index')

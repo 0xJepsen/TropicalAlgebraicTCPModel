@@ -238,8 +238,7 @@ class Link(object):
             the bit rate of the link
     """
 
-    def __init__(self, id, env, rate):
-        self.id = id
+    def __init__(self, env, rate):
         self.rate = rate
         self.buf1 = simpy.Store(env)
         self.buf2 = simpy.Store(env)
@@ -261,7 +260,6 @@ class Link(object):
             with self.buf2.get() as re:
                 msg = yield re
                 yield self.env.timeout(msg.size / self.rate)
-                print("received ack for for pkt {} at time {}".format(msg.id, self.env.now))
                 self.back.receive(msg)
 
     def send(self, pkt):
@@ -297,8 +295,9 @@ class SwitchPort(object):
         self.env = env
         self.run_buf1 = env.process(self.run_buffer_1())
         self.run_buf2 = env.process(self.run_buffer_2())
-        self.front = []
-        self.back = []
+        self.front = None
+        self.back = None
+        self.outs = []
         self.time_last_sent = 0
         self.packets_rec = 0
         self.packets_drop = 0
@@ -319,6 +318,8 @@ class SwitchPort(object):
                 yield self.env.timeout(msg.size / self.rate)  # processing time
                 msg.departure[self.id] = int(self.env.now)
                 print("departure of Pkt {} at Switch {}: {}".format(msg.id, self.id, self.env.now))
+                print("packet dst: ", msg.dst)
+                print("front: ", self.front.front.id)
                 self.front.send(msg)
 
     def run_buffer_2(self):
