@@ -287,7 +287,7 @@ class SwitchPort(object):
 
     """
 
-    def __init__(self, id, env, rate, qlimit=None, limit_bytes=True, debug=False):
+    def __init__(self, id, env, rate, destinations, qlimit=None, limit_bytes=True, debug=False):
         self.id = id
         self.buf1 = simpy.Store(env)
         self.buf2 = simpy.Store(env)
@@ -297,7 +297,9 @@ class SwitchPort(object):
         self.run_buf2 = env.process(self.run_buffer_2())
         self.front = None
         self.back = None
-        self.outs = []
+        self.out = []
+        self.destinations = destinations
+        self.routing_rules = {}
         self.time_last_sent = 0
         self.packets_rec = 0
         self.packets_drop = 0
@@ -307,7 +309,31 @@ class SwitchPort(object):
         self.debug = debug
         self.busy = 0  # Used to track if a packet is currently being sent
 
-    # def decide_port(self):
+    #     if len(self.out) == 1:
+    #         # self.front = self.out[0]
+    #         for dst in destinations:
+    #             self.routing_rules[dst] = self.out
+    #     else:
+    #         for out in self.out:
+    #             if out.front.id == pkt.dst:
+    #
+    # def pop_routing_table(self):
+    #     for dst in self.destinations:
+    #         for out in self.out:
+    #             if out.front.id == dst:
+    #                 self.routing_rules[dst] = out
+    #                 break
+    #             else:
+
+    def pop_routing_table(self):  # self.id, self.destination
+        for dst in self.destinations:  # find destination for each destination
+            for child in self.out:
+                if child.front.id == dst:
+                    self.routing_rules[dst] = out
+                    return True
+                for x in child.front.out:  # not sure this recursive part is right
+                    if find_dest(x):
+                        return true
 
     def run_buffer_1(self):
         while True:
@@ -318,8 +344,19 @@ class SwitchPort(object):
                 yield self.env.timeout(msg.size / self.rate)  # processing time
                 msg.departure[self.id] = int(self.env.now)
                 print("departure of Pkt {} at Switch {}: {}".format(msg.id, self.id, self.env.now))
-                print("packet dst: ", msg.dst)
+                print("packet flow_id: ", msg.flow_id)
+                if len(self.out) ==1:
+                    self.front = self.out[0]
+                else:
+                    self.front = self.out[msg.flow_id]
+                    print("out 1 id: ", self.out[0].front.id)
+                    print("type :", self.out[0].front)
+                    print("out 2 id: ", self.out[1].front.id)
+                    print("type :", self.out[1].front)
+
+
                 print("front: ", self.front.front.id)
+                self.front
                 self.front.send(msg)
 
     def run_buffer_2(self):

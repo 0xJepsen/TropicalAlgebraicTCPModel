@@ -13,8 +13,8 @@ class SimulationConfig(object):
         self.vn = []
         self.switch_rate = 10
         self.link_rate = 10
-        self.dist_sise = 10
-        self.simtime = 50
+        self.dist_size = 10
+        self.sim_time = 50
         self.switch_que_size = 50
 
         vn = []
