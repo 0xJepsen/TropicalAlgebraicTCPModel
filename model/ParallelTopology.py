@@ -56,6 +56,18 @@ def simple_branch(conf):
 
     # wire back
 
+    ps1.out = l4
+    ps2.out = l5
+
+    l4.back = s2
+    l5.back = s2
+
+    s2.back = l3
+    l3.back = s1
+
+
+    # env.run(until=SIM_TIME)
+
     env.run(until=conf.sim_time)
 
     print(

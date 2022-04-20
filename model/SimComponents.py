@@ -50,13 +50,14 @@ class Packet(object):
 
 class Ack(object):
 
-    def __init__(self, pkt: Packet, src, dst):
+    def __init__(self, pkt: Packet, src, dst, flow_id=0):
         self.size = 0.03 / pkt.size
         self.id = pkt.id
         self.arrival = {}
         self.departure = {}
         self.src = src
         self.dst = dst
+        self.flow_id = flow_id
 
     def __repr__(self):
         return "id: {}, src: {}, dst: {}, size: {}". \
@@ -108,6 +109,7 @@ class PacketGenerator(object):
         self.seen_ack = []
 
     def send_it(self):
+        # self.front.back = self
         """The generator function used in simulations.
         """
         # V_n = {1, 1, 2, 2, 2, 3, 3, 3, 3, 4, 1, 1, 2, 2, 2, 3, 3, 3, 3}
@@ -218,7 +220,7 @@ class PacketSink(object):
                 print(msg)
 
     def generate_Ack(self, pkt: Packet):
-        ack = Ack(pkt, self.id, pkt.dst)
+        ack = Ack(pkt, self.id, pkt.dst, flow_id=pkt.flow_id)
         return ack
 
     def set_arrival(self, pkt):
@@ -249,6 +251,7 @@ class Link(object):
         self.back = None
 
     def run_buffer_1(self):
+        # self.front.back = self
         while True:
             with self.buf1.get() as re:
                 msg = yield re
@@ -256,6 +259,7 @@ class Link(object):
                 self.front.send(msg)
 
     def run_buffer_2(self):
+
         while True:
             with self.buf2.get() as re:
                 msg = yield re
@@ -336,6 +340,7 @@ class SwitchPort(object):
                         return true
 
     def run_buffer_1(self):
+        # self.front.back = self
         while True:
             with self.buf1.get() as request:
                 msg = yield request

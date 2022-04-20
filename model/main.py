@@ -44,7 +44,6 @@ def simulate(conf):
 
     # Wire packet generators and sink together
 
-
     pg.out = l1
     l1.front = s1
     s1.out.append(l2)
