@@ -62,26 +62,33 @@ def simple_branch(conf):
     l4.back = s2
     l5.back = s2
 
-    s2.back = l3
+    s2.outback.append(l3)
     l3.back = s1
-
+    s1.outback.append(l1)
+    s1.outback.append(l2)
+    l2.back = pg2
+    l1.back = pg1
 
     # env.run(until=SIM_TIME)
 
     env.run(until=conf.sim_time)
 
     print(
-        "received: {}, s1 dropped {}, s2 dropped {}, sent {}".format(
-            ps.packets_rec, s1.packets_drop, s2.packets_drop, pg.packets_sent
+        "received by PS1: {}, received by PS2: {}s1 dropped {}, s2 dropped {}, sent by PG1 {}, sent by PG2 {}".format(
+            ps1.packets_rec, ps2.packets_rec, s1.packets_drop, s2.packets_drop, pg1.packets_sent, pg2.packets_sent
         )
     )
-    df = pd.DataFrame.from_dict(ps.data)
-    df_simulated = df.transpose()
-    return df_simulated, ps
+    df1 = pd.DataFrame.from_dict(ps1.data)
+    df2 = pd.DataFrame.from_dict(ps2.data)
+    df1_simulated = df1.transpose()
+    df2_simulated = df2.transpose()
+    return (df1_simulated,df2_simulated), (ps1, ps2)
 
 
-df, ps = simple_branch(config)
-pprint(df)
+(df1, df2), (ps1, ps2) = simple_branch(config)
+pprint(df1)
+pprint(df2)
+
 # def Parallel(conf):
 #     env = simpy.Environment()  # Create the SimPy environment
 #     pg1 = PacketGenerator(

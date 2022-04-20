@@ -53,9 +53,9 @@ def simulate(conf):
 
     ps.out = l3
     l3.back = s2
-    s2.back = l2
+    s2.outback.append(l2)
     l2.back = s1
-    s1.back = l1
+    s1.outback.append(l1)
     l1.back = pg
     env.run(until=SIM_TIME)
 

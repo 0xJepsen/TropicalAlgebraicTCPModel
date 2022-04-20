@@ -263,6 +263,7 @@ class Link(object):
         while True:
             with self.buf2.get() as re:
                 msg = yield re
+                print("Link recieved msg")
                 yield self.env.timeout(msg.size / self.rate)
                 self.back.receive(msg)
 
@@ -302,6 +303,7 @@ class SwitchPort(object):
         self.front = None
         self.back = None
         self.out = []
+        self.outback = []
         self.destinations = destinations
         self.routing_rules = {}
         self.time_last_sent = 0
@@ -350,7 +352,7 @@ class SwitchPort(object):
                 msg.departure[self.id] = int(self.env.now)
                 print("departure of Pkt {} at Switch {}: {}".format(msg.id, self.id, self.env.now))
                 print("packet flow_id: ", msg.flow_id)
-                if len(self.out) ==1:
+                if len(self.out) == 1:
                     self.front = self.out[0]
                 else:
                     self.front = self.out[msg.flow_id]
@@ -359,18 +361,28 @@ class SwitchPort(object):
                     print("out 2 id: ", self.out[1].front.id)
                     print("type :", self.out[1].front)
 
-
                 print("front: ", self.front.front.id)
-                self.front
+                # self.front
                 self.front.send(msg)
 
     def run_buffer_2(self):
         while True:
             with self.buf2.get() as request:
                 msg = yield request
-                # msg.arrival[self.id] = int(self.env.now)
                 # yield self.env.timeout(msg.size / self.rate)  # processing time
-                # msg.departure[self.id] = int(self.env.now)
+                print("msg flow ID", msg.flow_id)
+                print(self.outback)
+                if len(self.outback) == 1:
+                    self.back = self.outback[0]
+                else:
+                    self.back = self.outback[msg.flow_id]
+                    print("out 1 id: ", self.outback[0].back.id)
+                    print("type :", self.outback[0].back)
+                    print("out 2 id: ", self.outback[1].back.id)
+                    print("type :", self.outback[1].back)
+
+                print("front: ", self.front.front.id)
+                # self.front
                 self.back.receive(msg)
 
     def send(self, pkt):
