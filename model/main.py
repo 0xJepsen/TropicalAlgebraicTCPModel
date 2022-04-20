@@ -29,9 +29,10 @@ def simulate(conf):
     pg = PacketGenerator(
         env, "Generator", distSize, LINK_BANDWIDTH, conf.max_window
     )
-    s1 = SwitchPort(1, env, rate=SWITCH_BANDWIDTH, qlimit=SWITCH_QSIZE)
-    s2 = SwitchPort(2, env, rate=SWITCH_BANDWIDTH, qlimit=SWITCH_QSIZE)
+
     ps = PacketSink(3, env, rate=SWITCH_BANDWIDTH, qlimit=SWITCH_QSIZE)
+    s1 = SwitchPort(1, env, SWITCH_BANDWIDTH, [ps.id], qlimit=SWITCH_QSIZE)
+    s2 = SwitchPort(2, env, SWITCH_BANDWIDTH, [ps.id], qlimit=SWITCH_QSIZE)
 
     l1 = Link(env, LINK_BANDWIDTH)
     l2 = Link(env, LINK_BANDWIDTH)
@@ -45,16 +46,16 @@ def simulate(conf):
 
     pg.out = l1
     l1.front = s1
-    s1.front = l2
+    s1.out.append(l2)
     l2.front = s2
-    s2.front = l3
+    s2.out.append(l3)
     l3.front = ps
 
     ps.out = l3
     l3.back = s2
-    s2.back = l2
+    s2.outback.append(l2)
     l2.back = s1
-    s1.back = l1
+    s1.outback.append(l1)
     l1.back = pg
     env.run(until=SIM_TIME)
 

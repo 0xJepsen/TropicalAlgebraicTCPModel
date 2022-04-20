@@ -50,13 +50,14 @@ class Packet(object):
 
 class Ack(object):
 
-    def __init__(self, pkt: Packet, src, dst):
+    def __init__(self, pkt: Packet, src, dst, flow_id=0):
         self.size = 0.03 / pkt.size
         self.id = pkt.id
         self.arrival = {}
         self.departure = {}
         self.src = src
         self.dst = dst
+        self.flow_id = flow_id
 
     def __repr__(self):
         return "id: {}, src: {}, dst: {}, size: {}". \
@@ -108,6 +109,7 @@ class PacketGenerator(object):
         self.seen_ack = []
 
     def send_it(self):
+        # self.front.back = self
         """The generator function used in simulations.
         """
         # V_n = {1, 1, 2, 2, 2, 3, 3, 3, 3, 4, 1, 1, 2, 2, 2, 3, 3, 3, 3}
@@ -218,7 +220,7 @@ class PacketSink(object):
                 print(msg)
 
     def generate_Ack(self, pkt: Packet):
-        ack = Ack(pkt, self.id, pkt.dst)
+        ack = Ack(pkt, self.id, pkt.dst, flow_id=pkt.flow_id)
         return ack
 
     def set_arrival(self, pkt):
@@ -249,6 +251,7 @@ class Link(object):
         self.back = None
 
     def run_buffer_1(self):
+        # self.front.back = self
         while True:
             with self.buf1.get() as re:
                 msg = yield re
@@ -256,9 +259,11 @@ class Link(object):
                 self.front.send(msg)
 
     def run_buffer_2(self):
+
         while True:
             with self.buf2.get() as re:
                 msg = yield re
+                print("Link recieved msg")
                 yield self.env.timeout(msg.size / self.rate)
                 self.back.receive(msg)
 
@@ -287,7 +292,7 @@ class SwitchPort(object):
 
     """
 
-    def __init__(self, id, env, rate, qlimit=None, limit_bytes=True, debug=False):
+    def __init__(self, id, env, rate, destinations, qlimit=None, limit_bytes=True, debug=False):
         self.id = id
         self.buf1 = simpy.Store(env)
         self.buf2 = simpy.Store(env)
@@ -297,7 +302,10 @@ class SwitchPort(object):
         self.run_buf2 = env.process(self.run_buffer_2())
         self.front = None
         self.back = None
-        self.outs = []
+        self.out = []
+        self.outback = []
+        self.destinations = destinations
+        self.routing_rules = {}
         self.time_last_sent = 0
         self.packets_rec = 0
         self.packets_drop = 0
@@ -307,9 +315,34 @@ class SwitchPort(object):
         self.debug = debug
         self.busy = 0  # Used to track if a packet is currently being sent
 
-    # def decide_port(self):
+    #     if len(self.out) == 1:
+    #         # self.front = self.out[0]
+    #         for dst in destinations:
+    #             self.routing_rules[dst] = self.out
+    #     else:
+    #         for out in self.out:
+    #             if out.front.id == pkt.dst:
+    #
+    # def pop_routing_table(self):
+    #     for dst in self.destinations:
+    #         for out in self.out:
+    #             if out.front.id == dst:
+    #                 self.routing_rules[dst] = out
+    #                 break
+    #             else:
+
+    def pop_routing_table(self):  # self.id, self.destination
+        for dst in self.destinations:  # find destination for each destination
+            for child in self.out:
+                if child.front.id == dst:
+                    self.routing_rules[dst] = out
+                    return True
+                for x in child.front.out:  # not sure this recursive part is right
+                    if find_dest(x):
+                        return true
 
     def run_buffer_1(self):
+        # self.front.back = self
         while True:
             with self.buf1.get() as request:
                 msg = yield request
@@ -318,17 +351,38 @@ class SwitchPort(object):
                 yield self.env.timeout(msg.size / self.rate)  # processing time
                 msg.departure[self.id] = int(self.env.now)
                 print("departure of Pkt {} at Switch {}: {}".format(msg.id, self.id, self.env.now))
-                print("packet dst: ", msg.dst)
+                print("packet flow_id: ", msg.flow_id)
+                if len(self.out) == 1:
+                    self.front = self.out[0]
+                else:
+                    self.front = self.out[msg.flow_id]
+                    print("out 1 id: ", self.out[0].front.id)
+                    print("type :", self.out[0].front)
+                    print("out 2 id: ", self.out[1].front.id)
+                    print("type :", self.out[1].front)
+
                 print("front: ", self.front.front.id)
+                # self.front
                 self.front.send(msg)
 
     def run_buffer_2(self):
         while True:
             with self.buf2.get() as request:
                 msg = yield request
-                # msg.arrival[self.id] = int(self.env.now)
                 # yield self.env.timeout(msg.size / self.rate)  # processing time
-                # msg.departure[self.id] = int(self.env.now)
+                print("msg flow ID", msg.flow_id)
+                print(self.outback)
+                if len(self.outback) == 1:
+                    self.back = self.outback[0]
+                else:
+                    self.back = self.outback[msg.flow_id]
+                    print("out 1 id: ", self.outback[0].back.id)
+                    print("type :", self.outback[0].back)
+                    print("out 2 id: ", self.outback[1].back.id)
+                    print("type :", self.outback[1].back)
+
+                print("front: ", self.front.front.id)
+                # self.front
                 self.back.receive(msg)
 
     def send(self, pkt):
