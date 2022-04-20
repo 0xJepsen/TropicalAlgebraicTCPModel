@@ -1,23 +1,10 @@
-import simpy
 from Modelingfncs import Make_Y, delay, A_from_components, Z_continuous, Z_init
-import pandas as pd
-from pprint import pprint
-import matplotlib.pyplot as plt
-from Simulation import SimulationConfig
 from Topologies import linear, simple_branch
-
-config = SimulationConfig("sim1", 4, 4)
-
-distSize = 10
-SWITCH_BANDWIDTH = 10
-LINK_BANDWIDTH = 10
-SWITCH_QSIZE = 50
-SIM_TIME = 100
 
 
 def validate_Y(conf):
     # TODO: ABSTRACT parameters
-    df_simulated, ps = linear()
+    df_simulated, ps = linear(conf)
     """Logic for error extraction of Y_n"""
     df_simulated_departures = df_simulated.loc[:, ["departures"]]
     print("---------- Simulated Departure Data ----------")
@@ -47,7 +34,7 @@ def validate_Y(conf):
 
 
 def validate_Z(conf, flag=False):
-    df_simulated, ps = linear()
+    df_simulated, ps = simulate(conf)
     if flag:
         generated_departures = Make_Y(ps.packets_rec - 1, conf)
         data = pd.DataFrame.from_dict(generated_departures, orient='index')
@@ -99,7 +86,7 @@ def validate_Z(conf, flag=False):
 
 
 def validate_z_against_y(conf):
-    df_simulated, ps = linear()
+    df_simulated, ps = simulate(conf)
     print("---------- Simulated Departure Data ----------")
     simulated_departures = df_simulated.loc[:, ["departures", "V_n"]]
     pprint(simulated_departures.head())
@@ -107,26 +94,3 @@ def validate_z_against_y(conf):
     df_generated = pd.DataFrame.from_dict(generated_departures, orient='index')
     print("---------- Generated Departure Data ----------")
     pprint(df_generated.head())
-
-
-def main():
-    # validate_Y(config)
-    # sim, ps = linear()
-    # print(sim)
-
-    # (df1, df2), (ps1, ps2) = simple_branch()
-    # pprint(df1)
-    # pprint(df2)
-    # validate_z_against_y(config)
-    # generated_departures = Make_Y(10, config)
-    # df_generated = pd.DataFrame.from_dict(generated_departures, orient='index')
-    # print("---------- Generated Departure Data ----------")
-    # pprint(df_generated)
-
-    validate_Z(config)
-    # df_simulated, ps = simulate(config)
-    # pprint(df_simulated)
-
-
-if __name__ == '__main__':
-    main()
