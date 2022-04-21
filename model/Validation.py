@@ -2,9 +2,9 @@ from Modelingfncs import Make_Y, delay, A_from_components, Z_continuous, Z_init
 from Topologies import linear, simple_branch
 
 
-def validate_Y(conf):
+def validate_Y(conf, sim_topology):
     # TODO: ABSTRACT parameters
-    df_simulated, ps = linear(conf)
+    df_simulated, ps = sim_topology()
     """Logic for error extraction of Y_n"""
     df_simulated_departures = df_simulated.loc[:, ["departures"]]
     print("---------- Simulated Departure Data ----------")
@@ -33,8 +33,8 @@ def validate_Y(conf):
     plt.show()
 
 
-def validate_Z(conf, flag=False):
-    df_simulated, ps = simulate(conf)
+def validate_Z(conf, sim_topology, flag=False):
+    df_simulated, ps = sim_topology()
     if flag:
         generated_departures = Make_Y(ps.packets_rec - 1, conf)
         data = pd.DataFrame.from_dict(generated_departures, orient='index')
@@ -85,8 +85,8 @@ def validate_Z(conf, flag=False):
     plt.show()
 
 
-def validate_z_against_y(conf):
-    df_simulated, ps = simulate(conf)
+def validate_z_against_y(conf, sim_topology):
+    df_simulated, ps = sim_topology()
     print("---------- Simulated Departure Data ----------")
     simulated_departures = df_simulated.loc[:, ["departures", "V_n"]]
     pprint(simulated_departures.head())
@@ -94,3 +94,6 @@ def validate_z_against_y(conf):
     df_generated = pd.DataFrame.from_dict(generated_departures, orient='index')
     print("---------- Generated Departure Data ----------")
     pprint(df_generated.head())
+
+
+validate_Y()

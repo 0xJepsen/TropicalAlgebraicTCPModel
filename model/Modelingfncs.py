@@ -2,8 +2,6 @@ from pprint import pprint
 from MatrixMath import Matrix
 from Simulation import SimulationConfig
 
-config = SimulationConfig("test", 4, 4)
-
 
 def delay(src, dst):
     return abs(dst - src)  # for link rate of 1
@@ -158,10 +156,11 @@ def D_init(configuration):
         In the current implementation all sigma's are = 1 and all delays from router to router are 1
         Parameters
         ----------
-        max_window : int
-            The maximum window size the model achieves
-        number_of_routers : int
-            Number of routers in the model.
+        configuration: object with properties:
+            max_window : int
+                The maximum window size the model achieves
+            number_of_routers : int
+                Number of routers in the model.
         """
     kw = configuration.max_window * configuration.number_of_routers
     d = Matrix(dims=(kw, kw), fill=float("-inf"))
@@ -179,10 +178,11 @@ def A_from_components(packet_number, configuration):
         ----------
         packet_number : int
             the packet number you want to compute the network trace of
-        max_window : int
-            The maximum window size the model achieves
-        number_of_routers : int
-            Number of routers in the model.
+        configuration: object with properties:
+            max_window : int
+                The maximum window size the model achieves
+            number_of_routers : int
+                Number of routers in the model.
         """
     product = M_init(packet_number, configuration.number_of_routers)  # initialize to M
     # print("M: \n", product)
@@ -197,8 +197,8 @@ def A_from_components(packet_number, configuration):
 
     Next_block = 0
     put_m = True
-    block_for_mprime = config.vn[packet_number % 10] - 1
-    print(block_for_mprime)
+    block_for_mprime = configuration.vn[packet_number % 10] - 1
+    # print(block_for_mprime)
 
     if block_for_mprime < 0:
         raise Exception("v_n-1 needs to be greater than -1")
@@ -217,13 +217,6 @@ def A_from_components(packet_number, configuration):
     product = product.square_epsilon()
     final = D + product
     return final
-
-
-# def Z_gen(packet_number, configuration):
-#     z_initial = Z_init(packet_number, configuration)
-#     a_n = A_from_components(packet_number, configuration)
-#     z_next = a_n @ z_initial
-#     return z_next
 
 
 def Z_continuous(starting_packet_number, ending_packet_number, configuration):
