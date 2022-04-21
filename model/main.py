@@ -42,7 +42,7 @@ def validate_Y(df_simulated, ps, conf):
     ax.set_ylabel('Quantity of Error')
     ax.set_xlabel('Packet Number')
     plt.title("Error Between Y(n) and Simulated Traffic")
-    # plt.show()
+    plt.show()
     return df_generated
 
 
@@ -108,17 +108,16 @@ def validate_Z(df_simulated, ps, conf, flag=False):
 
 
 def main():
-    df1, ps1, conf = linear()
-    # (df1, df2), (ps1, ps2), conf = simple_branch()
+    # df1, ps1, conf = linear()
+    (df1, df2), (ps1, ps2), conf = simple_branch()
     #
     # data = df2.loc[:, ["departures", "V_n"]]
     #
     # # pprint(data)
-    pprint(df1)
-    # pprint(df2)
-    df_gen = validate_Y(df1, ps1, conf)
-    pprint(df_gen)
-    # validate_Z(df1, ps1, conf, flag=False)
+    # pprint(df1)
+    # # pprint(df2)
+    # pprint(df_gen)
+    validate_Z(df2, ps2, conf, flag=False)
 
     # df_simulated, ps = simulate(config)
     # pprint(df_simulated)
