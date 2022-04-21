@@ -42,8 +42,11 @@ def Make_Y(number_of_packets, configuration):
                 else:
                     """y_o(n) = Y_K(n - v_n-1) + d_(K,0)"""
                     init[j] = {'departures': {
-                        0: max(init[j - init[j - 1]['V_n']]['departures'][configuration.number_of_routers - 1] +
-                               delay(configuration.number_of_routers - 1, 0), init[j - 1]['departures'][0] + sigma())}}
+                        0: init[j - init[j - 1]['V_n']]['departures'][configuration.number_of_routers - 1] +
+                           delay(configuration.number_of_routers - 1, 0)}}
+
+                    # 0: max(init[j - init[j - 1]['V_n']]['departures'][configuration.number_of_routers - 1] +
+                    # delay(configuration.number_of_routers - 1, 0), init[j - 1]['departures'][0] + sigma())}}
                     sent += 1
                     init[j]['V_n'] = running_window
             else:
@@ -234,7 +237,6 @@ def Z_continuous(starting_packet_number, ending_packet_number, configuration):
         z_initial = znext
         current_packet += 1
     return zeees
-
 
 #
 # AVBADY = A_from_components(2, config)

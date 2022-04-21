@@ -15,7 +15,7 @@ class SimulationConfig(object):
         self.link_rate = 10
         self.dist_size = 10
         self.sim_time = 50
-        self.switch_que_size = 50
+        self.switch_que_size = 10
 
         vn = []
         for i in range(1, self.max_window + 1):
