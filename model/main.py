@@ -110,13 +110,6 @@ def validate_Z(df_simulated, ps, conf, flag=False):
 def main():
     # df1, ps1, conf = linear()
     (df1, df2), (ps1, ps2), conf = simple_branch()
-    #
-    # data = df2.loc[:, ["departures", "V_n"]]
-    #
-    # # pprint(data)
-    # pprint(df1)
-    # # pprint(df2)
-    # pprint(df_gen)
     validate_Z(df2, ps2, conf, flag=False)
 
     # df_simulated, ps = simulate(config)
