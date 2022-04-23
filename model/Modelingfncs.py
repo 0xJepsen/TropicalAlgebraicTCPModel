@@ -56,7 +56,7 @@ def Make_Y(number_of_packets, configuration):
                 else:
                     the_max = max(init[j]['departures'][i - 1] + delay(i - 1, i), init[j - 1]['departures'][i])
                     """y_i(n) = [max(y_i-1(n) + d_(i-1,i), y_i(n-1)]"""
-                init[j]['departures'][i] = the_max + sigma(configuration.switch_rate, )
+                init[j]['departures'][i] = the_max + sigma(configuration.switch_rate, configuration.packet_to_size[i])
         if running_window == configuration.max_window and sent > 0:
             running_window = 1
             sent = 0
@@ -102,7 +102,7 @@ def Z_init(packet_number, configuration):
     return new
 
 
-def M_init(packet_number, number_of_routers):
+def M_init(packet_number, configuration):
     """ This generates Matrix M for a given packet number and routers in the model
         M_i,j = Sum (from k = j to i of sigma_k(n)) + sum from k=j to i-1 of d_(k,k-1) if i>= j
         and M_i,j = -inf if i<j.
@@ -114,12 +114,12 @@ def M_init(packet_number, number_of_routers):
         number_of_routers : int
             Number of routers in the model.
         """
-    M = Matrix(dims=(number_of_routers, number_of_routers), fill=0)
-    for i in range(number_of_routers):
-        for j in range(number_of_routers):
+    M = Matrix(dims=(configuration.number_of_routers, configuration.number_of_routers), fill=0)
+    for i in range(configuration.number_of_routers):
+        for j in range(configuration.number_of_routers):
             if i >= j:
                 for _ in range(j, i + 1):
-                    M[i, j] += sigma()
+                    M[i, j] += sigma(configuration.switch_rate, configuration.packet_to_size[packet_number])
                 for h in range(j, i):
                     M[i, j] += delay(h, h - 1)
             else:
@@ -127,7 +127,7 @@ def M_init(packet_number, number_of_routers):
     return M
 
 
-def MPrime_init(packet_number, number_of_routers):
+def MPrime_init(packet_number, configuration):
     """ This generates Matrix M' for a given packet number and routers in the model
         M_i,j = Sum (from k = 1 to i of sigma_k(n) + d(k-1,1)) + d(K,0) if j=K
         and M_i,j = -inf if j<K.
@@ -139,15 +139,15 @@ def MPrime_init(packet_number, number_of_routers):
         number_of_routers : int
             Number of routers in the model.
         """
-    Mprime = Matrix(dims=(number_of_routers, number_of_routers), fill=0)
-    for i in range(number_of_routers):
-        for j in range(number_of_routers):
-            if j == number_of_routers - 1:
+    Mprime = Matrix(dims=(configuration.number_of_routers, configuration.number_of_routers), fill=0)
+    for i in range(configuration.number_of_routers):
+        for j in range(configuration.number_of_routers):
+            if j == configuration.number_of_routers - 1:
                 for k in range(1, i + 1):
                     Mprime[i, j] += delay(k - 1, k)
-                    Mprime[i, j] += sigma()
-                Mprime[i, j] += delay(number_of_routers - 1, 0)  # index from zero on routers
-            if j < number_of_routers - 1:
+                    Mprime[i, j] += sigma(configuration.switch_rate, configuration.packet_to_size[packet_number])
+                Mprime[i, j] += delay(configuration.number_of_routers - 1, 0)  # index from zero on routers
+            if j < configuration.number_of_routers - 1:
                 Mprime[i, j] = float("-inf")
     return Mprime
 
@@ -187,10 +187,10 @@ def A_from_components(packet_number, configuration):
             number_of_routers : int
                 Number of routers in the model.
         """
-    product = M_init(packet_number, configuration.number_of_routers)  # initialize to M
+    product = M_init(packet_number, configuration)  # initialize to M
     # print("M: \n", product)
 
-    mprime = MPrime_init(packet_number, configuration.number_of_routers)
+    mprime = MPrime_init(packet_number, configuration)
     # print("Mprime: \n", mprime)
 
     k_epsilon = Matrix(dims=(configuration.number_of_routers, configuration.number_of_routers), fill=float("-inf"))
