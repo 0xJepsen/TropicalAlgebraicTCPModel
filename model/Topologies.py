@@ -135,6 +135,8 @@ def linear():
     df = pd.DataFrame.from_dict(ps.data)
     df_simulated = df.transpose()
     dict = df.to_dict('index')
-    pprint(dict['Size'])
+    # pprint(dict['Size'])
     model_config = ModelConfig(sim_conf, dict)
+
+    # print("Model Config Link Rate:", model_config.link_rate)
     return df_simulated, ps, model_config

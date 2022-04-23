@@ -2,8 +2,10 @@ from pprint import pprint
 from MatrixMath import Matrix
 
 
-def delay(src, dst):
-    return abs(dst - src)  # for link rate of 1
+def delay(src, dst, link_rate, pkt_size):
+    number_of_links = abs(dst - src)
+    time = link_rate / pkt_size
+    return number_of_links * time
 
 
 def sigma(rate, size):
@@ -28,22 +30,18 @@ def Make_Y(number_of_packets, configuration):
     sent = 0
     running_window = 1
     init = {}
-    for j in range(0, number_of_packets + 1):
-        # loop through packets
-        for i in range(0, configuration.number_of_routers):
-            # loop through routers
-            if i == 0:
-                # first router
-                if j == 0:
-                    # first packet
+    for j in range(0, number_of_packets + 1):  # loop through packets
+        for i in range(0, configuration.number_of_routers):  # loop through routers
+            if i == 0:  # first router
+                if j == 0:  # first packet
                     init[j] = {'departures': {0: 0}, 'V_n': 1}
                     """first packet depart time"""
                     sent += 1
                 else:
                     """y_o(n) = Y_K(n - v_n-1) + d_(K,0)"""
                     init[j] = {'departures': {
-                        0: init[j - init[j - 1]['V_n']]['departures'][configuration.number_of_routers - 1] +
-                           delay(configuration.number_of_routers - 1, 0)}}
+                        0: int(init[j - init[j - 1]['V_n']]['departures'][configuration.number_of_routers - 1] +
+                           delay(configuration.number_of_routers - 1, 0, configuration.link_rate, configuration.packet_to_size[j]))}}
 
                     # 0: max(init[j - init[j - 1]['V_n']]['departures'][configuration.number_of_routers - 1] +
                     # delay(configuration.number_of_routers - 1, 0), init[j - 1]['departures'][0] + sigma())}}
@@ -51,12 +49,14 @@ def Make_Y(number_of_packets, configuration):
                     init[j]['V_n'] = running_window
             else:
                 if j - 1 == -1:
-                    the_max = max(init[j]['departures'][i - 1] + delay(i - 1, i), 0)
+                    # print("Delay: ", delay(i - 1, i, configuration.link_rate))
+                    # print("Packet number {} size {}, and  link rate {}".format(j, ))
+                    the_max = max(init[j]['departures'][i - 1] + delay(i - 1, i, configuration.link_rate, configuration.packet_to_size[j]), 0)
                     """Edge case for packet 0"""
                 else:
-                    the_max = max(init[j]['departures'][i - 1] + delay(i - 1, i), init[j - 1]['departures'][i])
+                    the_max = max(init[j]['departures'][i - 1] + delay(i - 1, i, configuration.link_rate, configuration.packet_to_size[j]), init[j - 1]['departures'][i])
                     """y_i(n) = [max(y_i-1(n) + d_(i-1,i), y_i(n-1)]"""
-                init[j]['departures'][i] = the_max + sigma(configuration.switch_rate, configuration.packet_to_size[i])
+                init[j]['departures'][i] = int(the_max + sigma(configuration.switch_rate, configuration.packet_to_size[j]))
         if running_window == configuration.max_window and sent > 0:
             running_window = 1
             sent = 0
@@ -121,7 +121,7 @@ def M_init(packet_number, configuration):
                 for _ in range(j, i + 1):
                     M[i, j] += sigma(configuration.switch_rate, configuration.packet_to_size[packet_number])
                 for h in range(j, i):
-                    M[i, j] += delay(h, h - 1)
+                    M[i, j] += delay(h, h - 1, configuration.link_rate, configuration.packet_to_size[j])
             else:
                 M[i, j] = float("-inf")
     return M
@@ -144,9 +144,9 @@ def MPrime_init(packet_number, configuration):
         for j in range(configuration.number_of_routers):
             if j == configuration.number_of_routers - 1:
                 for k in range(1, i + 1):
-                    Mprime[i, j] += delay(k - 1, k)
+                    Mprime[i, j] += delay(k - 1, k, configuration.link_rate, configuration.packet_to_size[j])
                     Mprime[i, j] += sigma(configuration.switch_rate, configuration.packet_to_size[packet_number])
-                Mprime[i, j] += delay(configuration.number_of_routers - 1, 0)  # index from zero on routers
+                Mprime[i, j] += delay(configuration.number_of_routers - 1, 0, configuration.link_rate, configuration.packet_to_size[j])  # index from zero on routers
             if j < configuration.number_of_routers - 1:
                 Mprime[i, j] = float("-inf")
     return Mprime
@@ -233,32 +233,3 @@ def Z_continuous(starting_packet_number, ending_packet_number, configuration):
         z_initial = znext
         current_packet += 1
     return zeees
-
-#
-# AVBADY = A_from_components(2, config)
-# print(AVBADY)
-
-# ze = Z_continuous(0, 12, config)
-# for m in ze.keys():
-#     print("N=", m)
-#     z = ze[m].transpose()
-#     print(z)
-
-# Z_test = Z_gen(pkt, config)
-# result = Z_test.transpose()
-# print(result)
-
-# y = Make_Y(13, config)
-# pprint(y)
-
-# Z_test= Z_init(pkt, config)
-# print(Z_test)
-
-# M_test = M_init(1, config.number_of_routers)
-# print(M_test)
-#
-# Mprime_test = MPrime_init(14, config.number_of_routers)
-# print(Mprime_test)
-#
-# D_test = D_init(config)
-# print(D_test)

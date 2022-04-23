@@ -8,13 +8,13 @@ from pprint import pprint
 def validate_Y(df_simulated, ps, conf):
     """Logic for error extraction of Y_n"""
     df_simulated_departures = df_simulated.loc[:, ["departures"]]
-    # print("---------- Simulated Departure Data ----------")
-    # pprint(df_simulated_departures.head())
-
+    print("---------- Simulated Departure Data ----------")
+    pprint(df_simulated_departures.head())
+    print("Model Config Link Rate: ", conf.link_rate)
     generated_departures = Make_Y(ps.packets_rec - 1, conf)
     df_generated = pd.DataFrame.from_dict(generated_departures, orient='index')
-    # print("---------- Generated Departure Data ----------")
-    # pprint(df_generated.head())
+    print("---------- Generated Departure Data ----------")
+    pprint(df_generated.head())
     errors = {}
     for i in range(0, ps.packets_rec):
         errors[i] = {}

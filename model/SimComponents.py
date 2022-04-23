@@ -120,7 +120,7 @@ class PacketGenerator(object):
                 self.last_received = msg.id
                 self.seen_ack.append(msg.id)
                 # print("Received message: ", msg.id)
-                print(self.env.now)
+                # print(self.env.now)
 
                 self.acks += 1
             while self.sent_per_window <= self.window:
