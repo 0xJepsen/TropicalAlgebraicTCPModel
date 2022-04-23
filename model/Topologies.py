@@ -95,7 +95,7 @@ def linear():
 
     env = simpy.Environment()  # Create the SimPy environment
     pg = PacketGenerator(
-        env, "Generator", const_size_distribution(10), sim_conf.switch_rate, sim_conf.max_window
+        env, "Generator", const_size_distribution(20), sim_conf.switch_rate, sim_conf.max_window
     )
 
     ps = PacketSink(3, env, rate=sim_conf.switch_rate, qlimit=sim_conf.switch_que_size)

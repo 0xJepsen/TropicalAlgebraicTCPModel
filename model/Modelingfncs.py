@@ -4,7 +4,7 @@ from MatrixMath import Matrix
 
 def delay(src, dst, link_rate, pkt_size):
     number_of_links = abs(dst - src)
-    time = link_rate / pkt_size
+    time = pkt_size / link_rate
     return number_of_links * time
 
 
@@ -49,8 +49,8 @@ def Make_Y(number_of_packets, configuration):
                     init[j]['V_n'] = running_window
             else:
                 if j - 1 == -1:
-                    # print("Delay: ", delay(i - 1, i, configuration.link_rate))
-                    # print("Packet number {} size {}, and  link rate {}".format(j, ))
+                    # print("Delay: ",  delay(i - 1, i, configuration.link_rate, configuration.packet_to_size[j]))
+                    # print("Packet number {} size {}, Sigma {}, and  link rate {}".format(j, configuration.packet_to_size[j], sigma(configuration.switch_rate, configuration.packet_to_size[j]), configuration.link_rate))
                     the_max = max(init[j]['departures'][i - 1] + delay(i - 1, i, configuration.link_rate, configuration.packet_to_size[j]), 0)
                     """Edge case for packet 0"""
                 else:

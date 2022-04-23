@@ -8,8 +8,8 @@ def main():
 
     print(df0)
 
-    # validate_Z(df0, ps0, model_conf)
-    validate_Y(df0, ps0, model_conf)
+    validate_Z(df0, ps0, model_conf)
+    # validate_Y(df0, ps0, model_conf)
 
 
 if __name__ == '__main__':
