@@ -13,8 +13,7 @@ class SimulationConfig(object):
         self.vn = []
         self.switch_rate = 10
         self.link_rate = 10
-        self.dist_size = 10
-        self.sim_time = 150
+        self.sim_time = 50
         self.switch_que_size = 10
         self.tcp_connections = number_of_connections
 

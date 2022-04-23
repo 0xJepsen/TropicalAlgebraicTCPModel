@@ -7,14 +7,18 @@ import matplotlib.pyplot as plt
 from Simulation import SimulationConfig
 
 
+def const_size_distribution(size):
+    return size
+
+
 def simple_branch():
     sim_conf = SimulationConfig("sim1", 4, 4, 2)
     env = simpy.Environment()  # Create the SimPy environment
     pg1 = PacketGenerator(
-        env, "Generator", sim_conf.dist_size, sim_conf.switch_rate, sim_conf.max_window, flow_id=0
+        env, "Generator", const_size_distribution(10), sim_conf.switch_rate, sim_conf.max_window, flow_id=0
     )
     pg2 = PacketGenerator(
-        env, "Generator", sim_conf.dist_size, sim_conf.switch_rate, sim_conf.max_window, flow_id=1
+        env, "Generator", const_size_distribution(20), sim_conf.switch_rate, sim_conf.max_window, flow_id=1
     )
 
     # flow ID 0 goes to packet sink 3, and flow ID 1 goings to packet sink 4
@@ -86,7 +90,7 @@ def linear():
 
     env = simpy.Environment()  # Create the SimPy environment
     pg = PacketGenerator(
-        env, "Generator", sim_conf.dist_size, sim_conf.switch_rate, sim_conf.max_window
+        env, "Generator", const_size_distribution(10), sim_conf.switch_rate, sim_conf.max_window
     )
 
     ps = PacketSink(3, env, rate=sim_conf.switch_rate, qlimit=sim_conf.switch_que_size)

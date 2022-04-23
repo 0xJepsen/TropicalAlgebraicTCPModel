@@ -49,13 +49,13 @@ def validate_Z(df_simulated, ps, conf, flag=False):
     zeee = Z_continuous(current_packet, ps.packets_rec - 1, conf)
     for m in zeee.keys():
         z = zeee[m].transpose()
-        print(z)
+        # print(z)
         current_index_packet = m
         errors = {current_index_packet: {}}
         breakpoint = 0
         total_pkts = 0
         for j in range(0, z.cols):
-            print("J:", j)
+            # print("J:", j)
             # print("z[0,j]:", z[0,j])
             # print("data[\"departures\"][current_index_packet]:", data["departures"][current_index_packet])
             #
