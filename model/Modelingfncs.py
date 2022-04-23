@@ -1,14 +1,13 @@
 from pprint import pprint
 from MatrixMath import Matrix
-from Simulation import SimulationConfig
 
 
 def delay(src, dst):
     return abs(dst - src)  # for link rate of 1
 
 
-def sigma():
-    return 1
+def sigma(rate, size):
+    return size / rate
 
 
 def Make_Y(number_of_packets, configuration):
@@ -20,8 +19,11 @@ def Make_Y(number_of_packets, configuration):
         ----------
         number_of_packets : int
             The number of packets you want to generate data for
-        configuration
-            has the simulation configuration information
+        configuration: object with properties:
+            max_window : int
+                The maximum window size the model achieves
+            number_of_routers : int
+                Number of routers in the model.
         """
     sent = 0
     running_window = 1
@@ -54,7 +56,7 @@ def Make_Y(number_of_packets, configuration):
                 else:
                     the_max = max(init[j]['departures'][i - 1] + delay(i - 1, i), init[j - 1]['departures'][i])
                     """y_i(n) = [max(y_i-1(n) + d_(i-1,i), y_i(n-1)]"""
-                init[j]['departures'][i] = the_max + sigma()
+                init[j]['departures'][i] = the_max + sigma(configuration.switch_rate, )
         if running_window == configuration.max_window and sent > 0:
             running_window = 1
             sent = 0
@@ -73,10 +75,11 @@ def Z_init(packet_number, configuration):
         ----------
         packet_number : int
             The packet number for which you want the network trace for
-        max_window : int
-            The maximum window size the model achieves
-        number_of_routers : int
-            Number of routers in the model.
+        configuration: object with properties:
+            max_window : int
+                The maximum window size the model achieves
+            number_of_routers : int
+                Number of routers in the model.
         """
 
     new = Matrix(dims=(configuration.number_of_routers * configuration.max_window, 1), fill=0)

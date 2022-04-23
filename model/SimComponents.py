@@ -210,6 +210,7 @@ class PacketSink(object):
                 "departures": msg.departure,
                 "link time": msg.size / self.rate,
                 "V_n": msg.v_n,
+                "Size": msg.size
             }
             self.out.receive(msg)
             if self.debug:

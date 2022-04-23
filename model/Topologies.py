@@ -4,7 +4,7 @@ import simpy
 import pandas as pd
 from pprint import pprint
 import matplotlib.pyplot as plt
-from Simulation import SimulationConfig
+from Config import SimulationConfig, ModelConfig
 
 
 def const_size_distribution(size):
@@ -82,7 +82,12 @@ def simple_branch():
     df_2 = pd.DataFrame.from_dict(ps2.data)
     df1_simulated = df_1.transpose()
     df2_simulated = df_2.transpose()
-    return (df1_simulated, df2_simulated), (ps1, ps2), sim_conf
+    dict1 = df1_simulated.to_dict()
+    dict2 = df2_simulated.to_dict()
+    model_config1 = ModelConfig(sim_conf, dict1)
+    model_config2 = ModelConfig(sim_conf, dict2)
+
+    return (df1_simulated, df2_simulated), (ps1, ps2), (model_config1, model_config2)
 
 
 def linear():
@@ -129,4 +134,7 @@ def linear():
     )
     df = pd.DataFrame.from_dict(ps.data)
     df_simulated = df.transpose()
-    return df_simulated, ps, sim_conf
+    dict = df.to_dict('index')
+    pprint(dict['Size'])
+    model_config = ModelConfig(sim_conf, dict)
+    return df_simulated, ps, model_config
