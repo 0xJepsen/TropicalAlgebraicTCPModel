@@ -3,14 +3,11 @@ from Validation import validate_Y, validate_Z
 
 
 def main():
-    # df1, ps1, conf = linear()
-    (df1, df2), (ps1, ps2), conf = simple_branch()
-    validate_Z(df2, ps2, conf, flag=False)
+    # df0, ps0, model_conf = linear()
+    (df1, df2), (ps1, ps2), (conf1, conf2) = simple_branch()
 
-    # validate_Y(df1, ps1, conf)
-
-    # df_simulated, ps = simulate(config)
-    # pprint(df_simulated)
+    # validate_Z(df1, ps1, conf1)
+    validate_Y(df1, ps1, conf1)
 
 
 if __name__ == '__main__':

@@ -92,9 +92,6 @@ class PacketGenerator(object):
         self.initial_delay = initial_delay
         self.finish = finish
         self.received = simpy.Store(env)
-        self.buf2 = simpy.Store(env)
-        self.front = None
-        self.back = None
         self.packets_sent = 0
         self.generate = env.process(self.send_it())
         self.dst = None
@@ -109,7 +106,6 @@ class PacketGenerator(object):
         self.seen_ack = []
 
     def send_it(self):
-        # self.front.back = self
         """The generator function used in simulations.
         """
         # V_n = {1, 1, 2, 2, 2, 3, 3, 3, 3, 4, 1, 1, 2, 2, 2, 3, 3, 3, 3}
@@ -124,7 +120,7 @@ class PacketGenerator(object):
                 self.last_received = msg.id
                 self.seen_ack.append(msg.id)
                 # print("Received message: ", msg.id)
-                print(self.env.now)
+                # print(self.env.now)
 
                 self.acks += 1
             while self.sent_per_window <= self.window:
@@ -214,6 +210,7 @@ class PacketSink(object):
                 "departures": msg.departure,
                 "link time": msg.size / self.rate,
                 "V_n": msg.v_n,
+                "Size": msg.size
             }
             self.out.receive(msg)
             if self.debug:

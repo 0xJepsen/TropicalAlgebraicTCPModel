@@ -1,14 +1,15 @@
 from pprint import pprint
 from MatrixMath import Matrix
-from Simulation import SimulationConfig
 
 
-def delay(src, dst):
-    return abs(dst - src)  # for link rate of 1
+def delay(src, dst, link_rate, pkt_size):
+    number_of_links = abs(dst - src)
+    time = pkt_size / link_rate
+    return number_of_links * time
 
 
-def sigma():
-    return 1
+def sigma(rate, size):
+    return size / rate
 
 
 def Make_Y(number_of_packets, configuration):
@@ -20,28 +21,27 @@ def Make_Y(number_of_packets, configuration):
         ----------
         number_of_packets : int
             The number of packets you want to generate data for
-        configuration
-            has the simulation configuration information
+        configuration: object with properties:
+            max_window : int
+                The maximum window size the model achieves
+            number_of_routers : int
+                Number of routers in the model.
         """
     sent = 0
     running_window = 1
     init = {}
-    for j in range(0, number_of_packets + 1):
-        # loop through packets
-        for i in range(0, configuration.number_of_routers):
-            # loop through routers
-            if i == 0:
-                # first router
-                if j == 0:
-                    # first packet
+    for j in range(0, number_of_packets + 1):  # loop through packets
+        for i in range(0, configuration.number_of_routers):  # loop through routers
+            if i == 0:  # first router
+                if j == 0:  # first packet
                     init[j] = {'departures': {0: 0}, 'V_n': 1}
                     """first packet depart time"""
                     sent += 1
                 else:
                     """y_o(n) = Y_K(n - v_n-1) + d_(K,0)"""
                     init[j] = {'departures': {
-                        0: init[j - init[j - 1]['V_n']]['departures'][configuration.number_of_routers - 1] +
-                           delay(configuration.number_of_routers - 1, 0)}}
+                        0: int(init[j - init[j - 1]['V_n']]['departures'][configuration.number_of_routers - 1] +
+                           delay(configuration.number_of_routers - 1, 0, configuration.link_rate, configuration.packet_to_size[j]))}}
 
                     # 0: max(init[j - init[j - 1]['V_n']]['departures'][configuration.number_of_routers - 1] +
                     # delay(configuration.number_of_routers - 1, 0), init[j - 1]['departures'][0] + sigma())}}
@@ -49,12 +49,14 @@ def Make_Y(number_of_packets, configuration):
                     init[j]['V_n'] = running_window
             else:
                 if j - 1 == -1:
-                    the_max = max(init[j]['departures'][i - 1] + delay(i - 1, i), 0)
+                    # print("Delay: ",  delay(i - 1, i, configuration.link_rate, configuration.packet_to_size[j]))
+                    # print("Packet number {} size {}, Sigma {}, and  link rate {}".format(j, configuration.packet_to_size[j], sigma(configuration.switch_rate, configuration.packet_to_size[j]), configuration.link_rate))
+                    the_max = max(init[j]['departures'][i - 1] + delay(i - 1, i, configuration.link_rate, configuration.packet_to_size[j]), 0)
                     """Edge case for packet 0"""
                 else:
-                    the_max = max(init[j]['departures'][i - 1] + delay(i - 1, i), init[j - 1]['departures'][i])
+                    the_max = max(init[j]['departures'][i - 1] + delay(i - 1, i, configuration.link_rate, configuration.packet_to_size[j]), init[j - 1]['departures'][i])
                     """y_i(n) = [max(y_i-1(n) + d_(i-1,i), y_i(n-1)]"""
-                init[j]['departures'][i] = the_max + sigma()
+                init[j]['departures'][i] = int(the_max + sigma(configuration.switch_rate, configuration.packet_to_size[j]))
         if running_window == configuration.max_window and sent > 0:
             running_window = 1
             sent = 0
@@ -73,10 +75,11 @@ def Z_init(packet_number, configuration):
         ----------
         packet_number : int
             The packet number for which you want the network trace for
-        max_window : int
-            The maximum window size the model achieves
-        number_of_routers : int
-            Number of routers in the model.
+        configuration: object with properties:
+            max_window : int
+                The maximum window size the model achieves
+            number_of_routers : int
+                Number of routers in the model.
         """
 
     new = Matrix(dims=(configuration.number_of_routers * configuration.max_window, 1), fill=0)
@@ -99,7 +102,7 @@ def Z_init(packet_number, configuration):
     return new
 
 
-def M_init(packet_number, number_of_routers):
+def M_init(packet_number, configuration):
     """ This generates Matrix M for a given packet number and routers in the model
         M_i,j = Sum (from k = j to i of sigma_k(n)) + sum from k=j to i-1 of d_(k,k-1) if i>= j
         and M_i,j = -inf if i<j.
@@ -111,20 +114,20 @@ def M_init(packet_number, number_of_routers):
         number_of_routers : int
             Number of routers in the model.
         """
-    M = Matrix(dims=(number_of_routers, number_of_routers), fill=0)
-    for i in range(number_of_routers):
-        for j in range(number_of_routers):
+    M = Matrix(dims=(configuration.number_of_routers, configuration.number_of_routers), fill=0)
+    for i in range(configuration.number_of_routers):
+        for j in range(configuration.number_of_routers):
             if i >= j:
                 for _ in range(j, i + 1):
-                    M[i, j] += sigma()
+                    M[i, j] += sigma(configuration.switch_rate, configuration.packet_to_size[packet_number])
                 for h in range(j, i):
-                    M[i, j] += delay(h, h - 1)
+                    M[i, j] += delay(h, h - 1, configuration.link_rate, configuration.packet_to_size[j])
             else:
                 M[i, j] = float("-inf")
     return M
 
 
-def MPrime_init(packet_number, number_of_routers):
+def MPrime_init(packet_number, configuration):
     """ This generates Matrix M' for a given packet number and routers in the model
         M_i,j = Sum (from k = 1 to i of sigma_k(n) + d(k-1,1)) + d(K,0) if j=K
         and M_i,j = -inf if j<K.
@@ -136,15 +139,15 @@ def MPrime_init(packet_number, number_of_routers):
         number_of_routers : int
             Number of routers in the model.
         """
-    Mprime = Matrix(dims=(number_of_routers, number_of_routers), fill=0)
-    for i in range(number_of_routers):
-        for j in range(number_of_routers):
-            if j == number_of_routers - 1:
+    Mprime = Matrix(dims=(configuration.number_of_routers, configuration.number_of_routers), fill=0)
+    for i in range(configuration.number_of_routers):
+        for j in range(configuration.number_of_routers):
+            if j == configuration.number_of_routers - 1:
                 for k in range(1, i + 1):
-                    Mprime[i, j] += delay(k - 1, k)
-                    Mprime[i, j] += sigma()
-                Mprime[i, j] += delay(number_of_routers - 1, 0)  # index from zero on routers
-            if j < number_of_routers - 1:
+                    Mprime[i, j] += delay(k - 1, k, configuration.link_rate, configuration.packet_to_size[j])
+                    Mprime[i, j] += sigma(configuration.switch_rate, configuration.packet_to_size[packet_number])
+                Mprime[i, j] += delay(configuration.number_of_routers - 1, 0, configuration.link_rate, configuration.packet_to_size[j])  # index from zero on routers
+            if j < configuration.number_of_routers - 1:
                 Mprime[i, j] = float("-inf")
     return Mprime
 
@@ -184,10 +187,10 @@ def A_from_components(packet_number, configuration):
             number_of_routers : int
                 Number of routers in the model.
         """
-    product = M_init(packet_number, configuration.number_of_routers)  # initialize to M
+    product = M_init(packet_number, configuration)  # initialize to M
     # print("M: \n", product)
 
-    mprime = MPrime_init(packet_number, configuration.number_of_routers)
+    mprime = MPrime_init(packet_number, configuration)
     # print("Mprime: \n", mprime)
 
     k_epsilon = Matrix(dims=(configuration.number_of_routers, configuration.number_of_routers), fill=float("-inf"))
@@ -230,32 +233,3 @@ def Z_continuous(starting_packet_number, ending_packet_number, configuration):
         z_initial = znext
         current_packet += 1
     return zeees
-
-#
-# AVBADY = A_from_components(2, config)
-# print(AVBADY)
-
-# ze = Z_continuous(0, 12, config)
-# for m in ze.keys():
-#     print("N=", m)
-#     z = ze[m].transpose()
-#     print(z)
-
-# Z_test = Z_gen(pkt, config)
-# result = Z_test.transpose()
-# print(result)
-
-# y = Make_Y(13, config)
-# pprint(y)
-
-# Z_test= Z_init(pkt, config)
-# print(Z_test)
-
-# M_test = M_init(1, config.number_of_routers)
-# print(M_test)
-#
-# Mprime_test = MPrime_init(14, config.number_of_routers)
-# print(Mprime_test)
-#
-# D_test = D_init(config)
-# print(D_test)

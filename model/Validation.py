@@ -8,13 +8,13 @@ from pprint import pprint
 def validate_Y(df_simulated, ps, conf):
     """Logic for error extraction of Y_n"""
     df_simulated_departures = df_simulated.loc[:, ["departures"]]
-    # print("---------- Simulated Departure Data ----------")
-    # pprint(df_simulated_departures.head())
-
+    print("---------- Simulated Departure Data ----------")
+    pprint(df_simulated_departures.head())
+    print("Model Config Link Rate: ", conf.link_rate)
     generated_departures = Make_Y(ps.packets_rec - 1, conf)
     df_generated = pd.DataFrame.from_dict(generated_departures, orient='index')
-    # print("---------- Generated Departure Data ----------")
-    # pprint(df_generated.head())
+    print("---------- Generated Departure Data ----------")
+    pprint(df_generated.head())
     errors = {}
     for i in range(0, ps.packets_rec):
         errors[i] = {}
@@ -36,6 +36,8 @@ def validate_Y(df_simulated, ps, conf):
 
 def validate_Z(df_simulated, ps, conf, flag=False):
 
+
+    pprint(df_simulated)
     if flag:
         generated_departures = Make_Y(ps.packets_rec - 1, conf)
         data = pd.DataFrame.from_dict(generated_departures, orient='index')
@@ -43,19 +45,20 @@ def validate_Z(df_simulated, ps, conf, flag=False):
         print("---------- Simulated Departure Data ----------")
         data = df_simulated.loc[:, ["departures", "V_n"]]
 
+    pprint(data)
     current_packet = 0
     errors_by_z = {}
 
     zeee = Z_continuous(current_packet, ps.packets_rec - 1, conf)
     for m in zeee.keys():
         z = zeee[m].transpose()
-        print(z)
+        # print(z)
         current_index_packet = m
         errors = {current_index_packet: {}}
         breakpoint = 0
         total_pkts = 0
         for j in range(0, z.cols):
-            print("J:", j)
+            # print("J:", j)
             # print("z[0,j]:", z[0,j])
             # print("data[\"departures\"][current_index_packet]:", data["departures"][current_index_packet])
             #
@@ -81,7 +84,6 @@ def validate_Z(df_simulated, ps, conf, flag=False):
         df_errors["sum"] = df_errors[["Router 0", "Router 1", "Router 2", "Router 3"]].sum(axis=1)
         df = pd.concat([df, df_errors]).drop_duplicates(subset=['packet'])
 
-    pprint(df.head())
     print("---------- Error In Departure Times ----------")
     df = df[df.packet >= 0]
     new = df.drop(columns=["packet"], axis=1)
@@ -91,7 +93,7 @@ def validate_Z(df_simulated, ps, conf, flag=False):
     ax.set_ylabel('Quantity of Error')
     ax.set_xlabel('Packet Number')
     plt.title("Error Between Z(n) and Simulated Traffic")
-    plt.show()
+    # plt.show()
 
 
 def validate_z_against_y(conf, sim_topology):

@@ -4,17 +4,21 @@ import simpy
 import pandas as pd
 from pprint import pprint
 import matplotlib.pyplot as plt
-from Simulation import SimulationConfig
+from Config import SimulationConfig, ModelConfig
+
+
+def const_size_distribution(size):
+    return size
 
 
 def simple_branch():
     sim_conf = SimulationConfig("sim1", 4, 4, 2)
     env = simpy.Environment()  # Create the SimPy environment
     pg1 = PacketGenerator(
-        env, "Generator", sim_conf.dist_size, sim_conf.switch_rate, sim_conf.max_window, flow_id=0
+        env, "Generator", const_size_distribution(10), sim_conf.switch_rate, sim_conf.max_window, flow_id=0
     )
     pg2 = PacketGenerator(
-        env, "Generator", sim_conf.dist_size, sim_conf.switch_rate, sim_conf.max_window, flow_id=1
+        env, "Generator", const_size_distribution(20), sim_conf.switch_rate, sim_conf.max_window, flow_id=1
     )
 
     # flow ID 0 goes to packet sink 3, and flow ID 1 goings to packet sink 4
@@ -78,7 +82,12 @@ def simple_branch():
     df_2 = pd.DataFrame.from_dict(ps2.data)
     df1_simulated = df_1.transpose()
     df2_simulated = df_2.transpose()
-    return (df1_simulated, df2_simulated), (ps1, ps2), sim_conf
+    dict1 = df1_simulated.to_dict()
+    dict2 = df2_simulated.to_dict()
+    model_config1 = ModelConfig(sim_conf, dict1)
+    model_config2 = ModelConfig(sim_conf, dict2)
+
+    return (df1_simulated, df2_simulated), (ps1, ps2), (model_config1, model_config2)
 
 
 def linear():
@@ -86,7 +95,7 @@ def linear():
 
     env = simpy.Environment()  # Create the SimPy environment
     pg = PacketGenerator(
-        env, "Generator", sim_conf.dist_size, sim_conf.switch_rate, sim_conf.max_window
+        env, "Generator", const_size_distribution(20), sim_conf.switch_rate, sim_conf.max_window
     )
 
     ps = PacketSink(3, env, rate=sim_conf.switch_rate, qlimit=sim_conf.switch_que_size)
@@ -125,4 +134,9 @@ def linear():
     )
     df = pd.DataFrame.from_dict(ps.data)
     df_simulated = df.transpose()
-    return df_simulated, ps, sim_conf
+    dict = df.to_dict('index')
+    # pprint(dict['Size'])
+    model_config = ModelConfig(sim_conf, dict)
+
+    # print("Model Config Link Rate:", model_config.link_rate)
+    return df_simulated, ps, model_config
