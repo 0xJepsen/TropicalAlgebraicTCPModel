@@ -36,6 +36,8 @@ def validate_Y(df_simulated, ps, conf):
 
 def validate_Z(df_simulated, ps, conf, flag=False):
 
+
+    pprint(df_simulated)
     if flag:
         generated_departures = Make_Y(ps.packets_rec - 1, conf)
         data = pd.DataFrame.from_dict(generated_departures, orient='index')
@@ -43,6 +45,7 @@ def validate_Z(df_simulated, ps, conf, flag=False):
         print("---------- Simulated Departure Data ----------")
         data = df_simulated.loc[:, ["departures", "V_n"]]
 
+    pprint(data)
     current_packet = 0
     errors_by_z = {}
 
@@ -81,7 +84,6 @@ def validate_Z(df_simulated, ps, conf, flag=False):
         df_errors["sum"] = df_errors[["Router 0", "Router 1", "Router 2", "Router 3"]].sum(axis=1)
         df = pd.concat([df, df_errors]).drop_duplicates(subset=['packet'])
 
-    pprint(df.head())
     print("---------- Error In Departure Times ----------")
     df = df[df.packet >= 0]
     new = df.drop(columns=["packet"], axis=1)
@@ -91,7 +93,7 @@ def validate_Z(df_simulated, ps, conf, flag=False):
     ax.set_ylabel('Quantity of Error')
     ax.set_xlabel('Packet Number')
     plt.title("Error Between Z(n) and Simulated Traffic")
-    plt.show()
+    # plt.show()
 
 
 def validate_z_against_y(conf, sim_topology):
