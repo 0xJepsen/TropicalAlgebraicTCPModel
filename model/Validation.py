@@ -31,7 +31,7 @@ def validate_Y(df_simulated, ps, conf):
     ax.set_ylabel('Quantity of Error')
     ax.set_xlabel('Packet Number')
     plt.title("Error Between Y(n) and Simulated Traffic")
-    # plt.show()
+    plt.show()
 
 
 def validate_Z(df_simulated, ps, conf, flag=False):
@@ -92,4 +92,4 @@ def validate_Z(df_simulated, ps, conf, flag=False):
     ax.set_ylabel('Quantity of Error')
     ax.set_xlabel('Packet Number')
     plt.title("Error Between Z(n) and Simulated Traffic")
-    # plt.show()
+    plt.show()
