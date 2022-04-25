@@ -9,12 +9,12 @@ def validate_Y(df_simulated, ps, conf):
     """Logic for error extraction of Y_n"""
     df_simulated_departures = df_simulated.loc[:, ["departures"]]
     print("---------- Simulated Departure Data ----------")
-    pprint(df_simulated_departures.head())
+    pprint(df_simulated_departures)
     print("Model Config Link Rate: ", conf.link_rate)
     generated_departures = Make_Y(ps.packets_rec - 1, conf)
     df_generated = pd.DataFrame.from_dict(generated_departures, orient='index')
     print("---------- Generated Departure Data ----------")
-    pprint(df_generated.head())
+    pprint(df_generated)
     errors = {}
     for i in range(0, ps.packets_rec):
         errors[i] = {}
@@ -25,17 +25,16 @@ def validate_Y(df_simulated, ps, conf):
     df_errors = pd.DataFrame.from_dict(errors, orient='index')
     df_errors["sum"] = df_errors.sum(axis=1)
 
-    # print("---------- Error In Departure Times ----------")
+    print("---------- Error In Departure Times ----------")
+    print(df_errors)
     ax = df_errors.plot()
     ax.set_ylabel('Quantity of Error')
     ax.set_xlabel('Packet Number')
     plt.title("Error Between Y(n) and Simulated Traffic")
-    plt.show()
-    return df_generated
+    # plt.show()
 
 
 def validate_Z(df_simulated, ps, conf, flag=False):
-
 
     pprint(df_simulated)
     if flag:
@@ -94,17 +93,3 @@ def validate_Z(df_simulated, ps, conf, flag=False):
     ax.set_xlabel('Packet Number')
     plt.title("Error Between Z(n) and Simulated Traffic")
     # plt.show()
-
-
-def validate_z_against_y(conf, sim_topology):
-    df_simulated, ps = sim_topology()
-    print("---------- Simulated Departure Data ----------")
-    simulated_departures = df_simulated.loc[:, ["departures", "V_n"]]
-    pprint(simulated_departures.head())
-    generated_departures = Make_Y(ps.packets_rec - 1, conf)
-    df_generated = pd.DataFrame.from_dict(generated_departures, orient='index')
-    print("---------- Generated Departure Data ----------")
-    pprint(df_generated.head())
-
-
-# validate_Y()

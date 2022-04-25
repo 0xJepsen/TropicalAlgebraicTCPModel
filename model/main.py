@@ -7,7 +7,10 @@ def main():
     (df1, df2), (ps1, ps2), (conf1, conf2) = simple_branch()
 
     # validate_Z(df1, ps1, conf1)
+    # validate_Z(df2, ps2, conf2)
+
     validate_Y(df1, ps1, conf1)
+    # validate_Y(df2, ps2, conf2)
 
 
 if __name__ == '__main__':
