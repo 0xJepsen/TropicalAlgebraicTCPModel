@@ -4,12 +4,6 @@
     didn't fit my needs.
 """
 import simpy
-import random
-import copy
-from simpy.core import BoundClass
-from simpy.resources import base
-from simpy.events import AnyOf, AllOf, Event
-from heapq import heappush, heappop
 
 
 class Packet(object):
@@ -328,15 +322,15 @@ class SwitchPort(object):
     #                 break
     #             else:
 
-    def pop_routing_table(self):  # self.id, self.destination
-        for dst in self.destinations:  # find destination for each destination
-            for child in self.out:
-                if child.front.id == dst:
-                    self.routing_rules[dst] = out
-                    return True
-                for x in child.front.out:  # not sure this recursive part is right
-                    if find_dest(x):
-                        return true
+    # def pop_routing_table(self):  # self.id, self.destination
+    #     for dst in self.destinations:  # find destination for each destination
+    #         for child in self.out:
+    #             if child.front.id == dst:
+    #                 self.routing_rules[dst] = out
+    #                 return True
+    #             for x in child.front.out:  # not sure this recursive part is right
+    #                 if find_dest(x):
+    #                     return true
 
     def run_buffer_1(self):
         # self.front.back = self
