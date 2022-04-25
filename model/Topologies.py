@@ -1,5 +1,4 @@
 from SimComponents import PacketGenerator, PacketSink, SwitchPort, Link
-from Modelingfncs import Make_Y, delay, A_from_components, Z_continuous, Z_init
 import simpy
 import pandas as pd
 from pprint import pprint
@@ -7,19 +6,48 @@ import matplotlib.pyplot as plt
 from Config import SimulationConfig, ModelConfig
 
 
-def const_size_distribution(size):
-    return size
+def const10():
+    return 10
 
 
-def simple_branch():
+def const20():
+    return 20
+
+
+def alternating_dist():
+    count = 0
+    if count % 2 == 0:
+        return 1 / 4 * 10
+    else:
+        return 2 / 3 * 10
+
+
+def simple_branch(packet_size_dist=None):
+    
     sim_conf = SimulationConfig("sim1", 4, 4, 2)
     env = simpy.Environment()  # Create the SimPy environment
-    pg1 = PacketGenerator(
-        env, "Generator", const_size_distribution(10), sim_conf.switch_rate, sim_conf.max_window, flow_id=0
-    )
-    pg2 = PacketGenerator(
-        env, "Generator", const_size_distribution(20), sim_conf.switch_rate, sim_conf.max_window, flow_id=1
-    )
+
+    if packet_size_dist is None:
+        pg1 = PacketGenerator(
+            env, "Generator", const10, sim_conf.switch_rate, sim_conf.max_window, flow_id=0
+        )
+        pg2 = PacketGenerator(
+            env, "Generator", const10, sim_conf.switch_rate, sim_conf.max_window, flow_id=1
+        )
+    if packet_size_dist == "alphe=2beta":
+        pg1 = PacketGenerator(
+            env, "Generator", const10, sim_conf.switch_rate, sim_conf.max_window, flow_id=0
+        )
+        pg2 = PacketGenerator(
+            env, "Generator", const20, sim_conf.switch_rate, sim_conf.max_window, flow_id=1
+        )
+    if packet_size_dist == "rational_alt":
+        pg1 = PacketGenerator(
+            env, "Generator", const10, sim_conf.switch_rate, sim_conf.max_window, flow_id=0
+        )
+        pg2 = PacketGenerator(
+            env, "Generator", alternating_dist, sim_conf.switch_rate, sim_conf.max_window, flow_id=1
+        )
 
     # flow ID 0 goes to packet sink 3, and flow ID 1 goings to packet sink 4
 
