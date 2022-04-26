@@ -138,7 +138,7 @@ class PacketGenerator(object):
         self.received.put(pkt)
 
     def gen_packets(self):
-        p = Packet(self.env.now, self.size(), self.packets_sent, src=self.id, dst=self.dst, flow_id=self.flow_id)
+        p = Packet(self.env.now, next(self.size), self.packets_sent, src=self.id, dst=self.dst, flow_id=self.flow_id)
         p.dst = self.dst
         self.packets_sent += 1
         self.sent_per_window += 1
