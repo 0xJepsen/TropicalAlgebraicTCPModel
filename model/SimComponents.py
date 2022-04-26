@@ -144,7 +144,7 @@ class PacketGenerator(object):
         self.sent_per_window += 1
         self.last_sent = p.id
         self.out.send(p)
-        p.departure[0] = int(self.env.now)
+        p.departure[0] = self.env.now
         return p
 
     def put(self, pkt):
@@ -194,9 +194,9 @@ class PacketSink(object):
             msg = (yield self.store.get())
             self.busy = 1
             self.byte_size -= msg.size
-            msg.arrival[self.out.back.id + 1] = int(self.env.now)
+            msg.arrival[self.out.back.id + 1] = self.env.now
             yield self.env.timeout(msg.size / self.rate)  # processing time
-            msg.departure[self.out.back.id + 1] = int(self.env.now)
+            msg.departure[self.out.back.id + 1] = self.env.now
             # print("Time pkt {} leaves Sink: {}".format(msg.id, self.env.now))
             self.packets_rec += 1
             self.data[msg.id] = {
@@ -337,10 +337,10 @@ class SwitchPort(object):
         while True:
             with self.buf1.get() as request:
                 msg = yield request
-                msg.arrival[self.id] = int(self.env.now)
+                msg.arrival[self.id] = self.env.now
                 # print("Arrival of Pkt {} at Switch {}: {}".format(msg.id, self.id, self.env.now))
                 yield self.env.timeout(msg.size / self.rate)  # processing time
-                msg.departure[self.id] = int(self.env.now)
+                msg.departure[self.id] = self.env.now
                 # print("departure of Pkt {} at Switch {}: {}".format(msg.id, self.id, self.env.now))
                 # print("packet flow_id: ", msg.flow_id)
                 if len(self.out) == 1:
