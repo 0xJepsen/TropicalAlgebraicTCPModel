@@ -2,40 +2,31 @@ from SimComponents import PacketGenerator, PacketSink, SwitchPort, Link
 import simpy
 import pandas as pd
 from random import expovariate
-from pprint import pprint
 import matplotlib.pyplot as plt
 from Config import SimulationConfig, ModelConfig
 
 
 def const10():
-    return 10
+    while True:
+        yield 10
 
 
 def const20():
-    return 20
+    while True:
+        yield 20
 
 
 def alternating_gen():
-    count=0
-    if count % 2 == 0:
-        yield 1 / 4 * 10
-        count +=1
-    else:
-        yield 2 / 3 * 10
-        count +1
-
-
-def alternating_dist():
-    x = alternating_gen()
-    return x
+    for i in range(0, 100000):
+        if i % 2 == 0:
+            yield 3 / 12
+        if i % 2 == 1:
+            yield 8 / 12
 
 
 def expSize():
-    return round(expovariate(0.06), 2)
-
-
-print(alternating_dist())
-
+    while True:
+        yield round(expovariate(0.06), 2)
 
 
 def simple_branch(packet_size_dist=None):
@@ -44,31 +35,31 @@ def simple_branch(packet_size_dist=None):
 
     if packet_size_dist is None:
         pg1 = PacketGenerator(
-            env, "Generator", const10, sim_conf.switch_rate, sim_conf.max_window, flow_id=0
+            env, "Generator", const10(), sim_conf.switch_rate, sim_conf.max_window, flow_id=0
         )
         pg2 = PacketGenerator(
-            env, "Generator", const10, sim_conf.switch_rate, sim_conf.max_window, flow_id=1
+            env, "Generator", const10(), sim_conf.switch_rate, sim_conf.max_window, flow_id=1
         )
     if packet_size_dist == "alphe=2beta":
         pg1 = PacketGenerator(
-            env, "Generator", const10, sim_conf.switch_rate, sim_conf.max_window, flow_id=0
+            env, "Generator", const10(), sim_conf.switch_rate, sim_conf.max_window, flow_id=0
         )
         pg2 = PacketGenerator(
-            env, "Generator", const20, sim_conf.switch_rate, sim_conf.max_window, flow_id=1
+            env, "Generator", const20(), sim_conf.switch_rate, sim_conf.max_window, flow_id=1
         )
     if packet_size_dist == "rational_alt":
         pg1 = PacketGenerator(
-            env, "Generator", const10, sim_conf.switch_rate, sim_conf.max_window, flow_id=0
+            env, "Generator", const10(), sim_conf.switch_rate, sim_conf.max_window, flow_id=0
         )
         pg2 = PacketGenerator(
-            env, "Generator", alternating_dist, sim_conf.switch_rate, sim_conf.max_window, flow_id=1
+            env, "Generator", alternating_gen(), sim_conf.switch_rate, sim_conf.max_window, flow_id=1
         )
     if packet_size_dist == "rand":
         pg1 = PacketGenerator(
-            env, "Generator", expSize, sim_conf.switch_rate, sim_conf.max_window, flow_id=0
+            env, "Generator", expSize(), sim_conf.switch_rate, sim_conf.max_window, flow_id=0
         )
         pg2 = PacketGenerator(
-            env, "Generator", expSize, sim_conf.switch_rate, sim_conf.max_window, flow_id=1
+            env, "Generator", expSize(), sim_conf.switch_rate, sim_conf.max_window, flow_id=1
         )
     # flow ID 0 goes to packet sink 3, and flow ID 1 goings to packet sink 4
 
@@ -141,10 +132,10 @@ def simple_branch(packet_size_dist=None):
 
 def linear():
     sim_conf = SimulationConfig("sim1", 4, 4, 1)
-
+    const10 = const(10)
     env = simpy.Environment()  # Create the SimPy environment
     pg = PacketGenerator(
-        env, "Generator", const10(), sim_conf.switch_rate, sim_conf.max_window
+        env, "Generator", const10, sim_conf.switch_rate, sim_conf.max_window
     )
 
     ps = PacketSink(3, env, rate=sim_conf.switch_rate, qlimit=sim_conf.switch_que_size)
