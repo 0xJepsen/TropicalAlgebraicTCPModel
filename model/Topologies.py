@@ -1,6 +1,7 @@
 from SimComponents import PacketGenerator, PacketSink, SwitchPort, Link
 import simpy
 import pandas as pd
+from random import expovariate
 from pprint import pprint
 import matplotlib.pyplot as plt
 from Config import SimulationConfig, ModelConfig
@@ -14,16 +15,30 @@ def const20():
     return 20
 
 
-def alternating_dist():
-    count = 0
+def alternating_gen():
+    count=0
     if count % 2 == 0:
-        return 1 / 4 * 10
+        yield 1 / 4 * 10
+        count +=1
     else:
-        return 2 / 3 * 10
+        yield 2 / 3 * 10
+        count +1
+
+
+def alternating_dist():
+    x = alternating_gen()
+    return x
+
+
+def expSize():
+    return round(expovariate(0.06), 2)
+
+
+print(alternating_dist())
+
 
 
 def simple_branch(packet_size_dist=None):
-    
     sim_conf = SimulationConfig("sim1", 4, 4, 2)
     env = simpy.Environment()  # Create the SimPy environment
 
@@ -48,7 +63,13 @@ def simple_branch(packet_size_dist=None):
         pg2 = PacketGenerator(
             env, "Generator", alternating_dist, sim_conf.switch_rate, sim_conf.max_window, flow_id=1
         )
-
+    if packet_size_dist == "rand":
+        pg1 = PacketGenerator(
+            env, "Generator", expSize, sim_conf.switch_rate, sim_conf.max_window, flow_id=0
+        )
+        pg2 = PacketGenerator(
+            env, "Generator", expSize, sim_conf.switch_rate, sim_conf.max_window, flow_id=1
+        )
     # flow ID 0 goes to packet sink 3, and flow ID 1 goings to packet sink 4
 
     ps1 = PacketSink(3, env, rate=sim_conf.switch_rate, qlimit=sim_conf.switch_que_size)
@@ -123,7 +144,7 @@ def linear():
 
     env = simpy.Environment()  # Create the SimPy environment
     pg = PacketGenerator(
-        env, "Generator", const_size_distribution(20), sim_conf.switch_rate, sim_conf.max_window
+        env, "Generator", const10(), sim_conf.switch_rate, sim_conf.max_window
     )
 
     ps = PacketSink(3, env, rate=sim_conf.switch_rate, qlimit=sim_conf.switch_que_size)

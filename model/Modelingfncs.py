@@ -53,7 +53,7 @@ def Make_Y(number_of_packets, configuration):
                 else:
                     the_max = max(init[j]['departures'][i - 1] + delay(i - 1, i, configuration.link_rate, configuration.packet_to_size[j]), init[j - 1]['departures'][i])
                     """y_i(n) = [max(y_i-1(n) + d_(i-1,i), y_i(n-1)]"""
-                init[j]['departures'][i] = int(the_max + sigma(configuration.switch_rate, configuration.packet_to_size[j]))
+                init[j]['departures'][i] = the_max + sigma(configuration.switch_rate, configuration.packet_to_size[j])
         if running_window == configuration.max_window and sent > 0:
             running_window = 1
             sent = 0
