@@ -34,7 +34,6 @@ def validate_Y(df_simulated, ps, conf):
 
 
 def validate_Z(df_simulated, ps, conf, flag=False):
-
     pprint(df_simulated)
     if flag:
         generated_departures = Make_Y(ps.packets_rec - 1, conf)
@@ -50,17 +49,11 @@ def validate_Z(df_simulated, ps, conf, flag=False):
     zeee = Z_continuous(current_packet, ps.packets_rec - 1, conf)
     for m in zeee.keys():
         z = zeee[m].transpose()
-        # print(z)
         current_index_packet = m
         errors = {current_index_packet: {}}
         breakpoint = 0
         total_pkts = 0
         for j in range(0, z.cols):
-            # print("J:", j)
-            # print("z[0,j]:", z[0,j])
-            # print("data[\"departures\"][current_index_packet]:", data["departures"][current_index_packet])
-            #
-            # print("data[\"departures\"][current_index_packet][j % conf.number_of_routers]:", data["departures"][current_index_packet][j % conf.number_of_routers])
             if current_index_packet < 0:
                 errors[current_index_packet]['Router {}'.format(j % conf.number_of_routers)] = 0
                 errors[current_index_packet]['packet'] = current_index_packet

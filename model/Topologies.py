@@ -65,8 +65,8 @@ def simple_branch(packet_size_dist=None):
     ps1 = PacketSink(3, env, rate=sim_conf.switch_rate, qlimit=sim_conf.switch_que_size)
     ps2 = PacketSink(4, env, rate=sim_conf.switch_rate, qlimit=sim_conf.switch_que_size)
 
-    s1 = SwitchPort(1, env, sim_conf.switch_rate, [ps1.id, ps2.id], qlimit=sim_conf.switch_que_size)
-    s2 = SwitchPort(2, env, sim_conf.switch_rate, [ps1.id, ps2.id], qlimit=sim_conf.switch_que_size)
+    s1 = SwitchPort(1, env, sim_conf.switch_rate, qlimit=sim_conf.switch_que_size)
+    s2 = SwitchPort(2, env, sim_conf.switch_rate, qlimit=sim_conf.switch_que_size)
 
     l1 = Link(env, sim_conf.link_rate)
     l2 = Link(env, sim_conf.link_rate)
@@ -137,8 +137,8 @@ def linear():
     )
 
     ps = PacketSink(3, env, rate=sim_conf.switch_rate, qlimit=sim_conf.switch_que_size)
-    s1 = SwitchPort(1, env, sim_conf.switch_rate, ps.id, qlimit=sim_conf.switch_que_size)
-    s2 = SwitchPort(2, env, sim_conf.switch_rate, ps.id, qlimit=sim_conf.switch_que_size)
+    s1 = SwitchPort(1, env, sim_conf.switch_rate, qlimit=sim_conf.switch_que_size)
+    s2 = SwitchPort(2, env, sim_conf.switch_rate, qlimit=sim_conf.switch_que_size)
 
     l1 = Link(env, sim_conf.link_rate)
     l2 = Link(env, sim_conf.link_rate)
