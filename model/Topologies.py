@@ -2,7 +2,6 @@ from SimComponents import PacketGenerator, PacketSink, SwitchPort, Link
 import simpy
 import pandas as pd
 from random import expovariate
-import matplotlib.pyplot as plt
 from Config import SimulationConfig, ModelConfig
 
 
@@ -40,7 +39,7 @@ def simple_branch(packet_size_dist=None):
         pg2 = PacketGenerator(
             env, "Generator", const10(), sim_conf.switch_rate, sim_conf.max_window, flow_id=1
         )
-    if packet_size_dist == "alphe=2beta":
+    if packet_size_dist == "alpha=2beta":
         pg1 = PacketGenerator(
             env, "Generator", const10(), sim_conf.switch_rate, sim_conf.max_window, flow_id=0
         )
@@ -132,10 +131,9 @@ def simple_branch(packet_size_dist=None):
 
 def linear():
     sim_conf = SimulationConfig("sim1", 4, 4, 1)
-    const10 = const(10)
     env = simpy.Environment()  # Create the SimPy environment
     pg = PacketGenerator(
-        env, "Generator", const10, sim_conf.switch_rate, sim_conf.max_window
+        env, "Generator", const10(), sim_conf.switch_rate, sim_conf.max_window
     )
 
     ps = PacketSink(3, env, rate=sim_conf.switch_rate, qlimit=sim_conf.switch_que_size)
@@ -175,7 +173,6 @@ def linear():
     df = pd.DataFrame.from_dict(ps.data)
     df_simulated = df.transpose()
     dict = df.to_dict('index')
-    # pprint(dict['Size'])
     model_config = ModelConfig(sim_conf, dict)
 
     # print("Model Config Link Rate:", model_config.link_rate)
