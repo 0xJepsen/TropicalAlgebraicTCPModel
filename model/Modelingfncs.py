@@ -231,6 +231,7 @@ def A_from_components(packet_number, configuration):
             Next_block += 1
     product = product.square_epsilon()
     final = D + product
+    print(final)
     return final
 
 
