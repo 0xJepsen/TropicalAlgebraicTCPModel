@@ -1,7 +1,7 @@
 # Max-PlusTCPModel
 
 
-This is discrete event simulator that verifies the corectness of the the [TCP tropical max-plus model](Max-PlusTCPModel/Papers/Refrences/TCPMaxPlus.pdf). It should be noted that this model has been abstracted into it's relative classes so that it can scale for a variety of network topologies and parameters. 
+This is discrete event simulator that verifies the corectness of the the [TCP tropical max-plus model](/Max-PlusTCPModel/Papers/Refrences/TCPMaxPlus.pdf). It should be noted that this model has been abstracted into it's relative classes so that it can scale for a variety of network topologies and parameters. 
 
 ## Simulator Architecture
 
